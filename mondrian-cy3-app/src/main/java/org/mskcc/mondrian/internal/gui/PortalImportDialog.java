@@ -34,6 +34,8 @@ import org.mskcc.mondrian.client.CancerStudy;
 import org.mskcc.mondrian.client.CaseList;
 import org.mskcc.mondrian.client.GeneticProfile;
 import org.mskcc.mondrian.internal.MondrianApp;
+import java.awt.GridLayout;
+import javax.swing.JLabel;
 
 public class PortalImportDialog extends JDialog {
 
@@ -76,10 +78,13 @@ public class PortalImportDialog extends JDialog {
 		
 		setTitle("Load Data From cBio Portal");
 		setBounds(100, 100, 450, 300);
-		getContentPane().setLayout(new BorderLayout());
+		BorderLayout borderLayout = new BorderLayout();
+		borderLayout.setVgap(2);
+		borderLayout.setHgap(2);
+		getContentPane().setLayout(borderLayout);
 		contentPanel.setBorder(new EmptyBorder(5, 5, 5, 5));
 		getContentPane().add(contentPanel, BorderLayout.CENTER);
-		contentPanel.setLayout(new BorderLayout(0, 0));
+		contentPanel.setLayout(new BorderLayout(5, 5));
 		{
 			JScrollPane scrollPane = new JScrollPane();
 			scrollPane.setViewportBorder(new TitledBorder(new LineBorder(new Color(184, 207, 229)), "Select Genomic Profile(s)", TitledBorder.LEADING, TitledBorder.TOP, null, new Color(51, 51, 51)));
@@ -99,7 +104,18 @@ public class PortalImportDialog extends JDialog {
 			}
 		}
 		{
+			final CBioPortalClient finalClient = this.portalClient; 
+		}
+		{
+			JPanel panel = new JPanel();
+			contentPanel.add(panel, BorderLayout.NORTH);
+			panel.setLayout(new GridLayout(2, 1, 0, 0));
+			{
+				JLabel lblNewLabel = new JLabel("Select a Cancer Study");
+				panel.add(lblNewLabel);
+			}
 			cancerStudyComboBox = new JComboBox();
+			panel.add(cancerStudyComboBox);
 			cancerStudyComboBox.setRenderer(new BasicComboBoxRenderer(){
 				public Component getListCellRendererComponent(JList list,
 						Object value, int index, boolean isSelected,
@@ -119,7 +135,38 @@ public class PortalImportDialog extends JDialog {
 					return this;
 				}		
 			});
-			final CBioPortalClient finalClient = this.portalClient; 
+			{
+				JPanel panel_1 = new JPanel();
+				contentPanel.add(panel_1, BorderLayout.SOUTH);
+				panel_1.setLayout(new GridLayout(2, 1, 0, 0));
+				{
+					JLabel lblNewLabel_1 = new JLabel("Select Patient/Case Set");
+					panel_1.add(lblNewLabel_1);
+				}
+				{
+					clinicalCaseComboBox = new JComboBox();
+					panel_1.add(clinicalCaseComboBox);
+					clinicalCaseComboBox.setRenderer(new BasicComboBoxRenderer(){
+						public Component getListCellRendererComponent(JList list,
+								Object value, int index, boolean isSelected,
+								boolean cellHasFocus) {
+							if (isSelected) {
+								setBackground(list.getSelectionBackground());
+								setForeground(list.getSelectionForeground());
+								if (-1 < index) {
+									list.setToolTipText("<html><body>" + ((CaseList)clinicalCaseComboBox.getModel().getElementAt(index)).getDescription() + "</body></html>");
+								}
+							} else {
+								setBackground(list.getBackground());
+								setForeground(list.getForeground());
+							}
+							setFont(list.getFont());
+							setText((value == null) ? "" : value.toString());
+							return this;
+						}		
+					});
+				}
+			}
 			cancerStudyComboBox.addActionListener(new ActionListener() {
 				public void actionPerformed(ActionEvent arg0) {
 					CancerStudy study = (CancerStudy)cancerStudyComboBox.getSelectedItem();
@@ -129,30 +176,6 @@ public class PortalImportDialog extends JDialog {
 					}
 				}
 			});
-			contentPanel.add(cancerStudyComboBox, BorderLayout.NORTH);
-		}
-		{
-			clinicalCaseComboBox = new JComboBox();
-			clinicalCaseComboBox.setRenderer(new BasicComboBoxRenderer(){
-				public Component getListCellRendererComponent(JList list,
-						Object value, int index, boolean isSelected,
-						boolean cellHasFocus) {
-					if (isSelected) {
-						setBackground(list.getSelectionBackground());
-						setForeground(list.getSelectionForeground());
-						if (-1 < index) {
-							list.setToolTipText("<html><body>" + ((CaseList)clinicalCaseComboBox.getModel().getElementAt(index)).getDescription() + "</body></html>");
-						}
-					} else {
-						setBackground(list.getBackground());
-						setForeground(list.getForeground());
-					}
-					setFont(list.getFont());
-					setText((value == null) ? "" : value.toString());
-					return this;
-				}		
-			});			
-			contentPanel.add(clinicalCaseComboBox, BorderLayout.SOUTH);
 		}
 		{
 			JPanel buttonPane = new JPanel();

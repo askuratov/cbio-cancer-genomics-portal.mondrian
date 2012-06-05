@@ -5,10 +5,17 @@ import static org.junit.Assert.*;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
+import java.util.logging.Logger;
 
 import org.junit.Test;
+import org.mskcc.mondrian.client.CBioPortalClient;
+import org.mskcc.mondrian.client.CancerStudy;
+import org.mskcc.mondrian.client.CaseList;
+import org.mskcc.mondrian.client.GeneticProfile;
 
 public class CBioPortalClientTest {
+	
+	private Logger log = Logger.getLogger(CBioPortalClientTest.class.getName());
 
 	@Test
 	public void test() throws Exception {
@@ -16,88 +23,37 @@ public class CBioPortalClientTest {
 		// private static String[] genes = {"XXXX"};
 		String[] genes = { "TP53", "EGFR", "MDM2", "BRCA1", "POLE", "GAPDH",
 				"ACTB", "AR", "AKT1", "AKT2", "AKT3", "KLK3", "XXXX" };
-		CBioPortalClient cBioPortalAccessor = new CBioPortalClient();
+		CBioPortalClient portalClient = new CBioPortalClient();
 
 		int i = 0;
 
-		System.out.println("**");
-		System.out.println("All studies: ");
-
 		// List all available cancer studies
-		List<CancerStudy> cancerStudies = cBioPortalAccessor.getCancerStudies();
-		for (CancerStudy cancerStudy : cancerStudies) {
-			System.out.println((i++) + "\tcancerStudy = "
-					+ cancerStudy.getName());
-		}
-
-		System.out.println("**");
+		List<CancerStudy> cancerStudies = portalClient.getCancerStudies();
+		assertTrue(cancerStudies.size() > 0);
 
 		// Select a random cancer study and then list case lists associated with
 		// this study
 		// CancerStudy cancerStudy =
 		// cancerStudies.get(random.nextInt(cancerStudies.size()));
 		CancerStudy cancerStudy = cancerStudies.get(16);
-		System.out.println("Using cancerStudy = " + cancerStudy.getName());
-		cBioPortalAccessor.setCurrentCancerStudy(cancerStudy);
-
-		System.out.println("**");
+		assertNotNull(cancerStudy);
+		assertNotNull(cancerStudy.getName());
+		portalClient.setCurrentCancerStudy(cancerStudy);
 
 		i = 0;
-
-		System.out.println("Case lists:");
-		List<CaseList> caseListsForCurrentStudy = cBioPortalAccessor
+		List<CaseList> caseListsForCurrentStudy = portalClient
 				.getCaseListsForCurrentStudy();
+		assertTrue(caseListsForCurrentStudy.size() > 0);
 		for (CaseList caseList : caseListsForCurrentStudy) {
-			System.out.println((i++) + "\tcaseList = "
-					+ caseList.getDescription());
+			assertNotNull(caseList.getName());
 		}
-
-		// Now use the first one on the list
-		// cBioPortalAccessor.setCurrentCaseList(caseListsForCurrentStudy.get(random.nextInt(caseListsForCurrentStudy.size())));
-		cBioPortalAccessor.setCurrentCaseList(caseListsForCurrentStudy.get(18));
-		System.out.println("**");
-		System.out.println("Current case list: "
-				+ cBioPortalAccessor.getCurrentCaseList().getDescription());
-
-		i = 0;
 
 		// Now list all geneticProfiles available for current study
-		System.out.println("**");
-		System.out.println("Genetic Profiles for the study:");
-		List<GeneticProfile> geneticProfilesForCurrentStudy = cBioPortalAccessor.getGeneticProfilesForCurrentStudy();
+		List<GeneticProfile> geneticProfilesForCurrentStudy = portalClient.getGeneticProfilesForCurrentStudy();
+		assertTrue(geneticProfilesForCurrentStudy.size() > 0);
 		for (GeneticProfile geneticProfile : geneticProfilesForCurrentStudy) {
-			System.out.println((i++) + "\tgeneticProfile = "
-					+ geneticProfile.getName() + " ("
-					+ geneticProfile.getType() + ")");
+			assertNotNull(geneticProfile.getName());
+			assertNotNull(geneticProfile.getType());
 		}
-
-		// Pick a random genetic profile from the list and set it.
-		List<GeneticProfile> geneticProfiles = new ArrayList<GeneticProfile>();
-		// geneticProfiles.add(geneticProfilesForCurrentStudy.get(random.nextInt(geneticProfilesForCurrentStudy.size())));
-		geneticProfiles.add(geneticProfilesForCurrentStudy.get(7));
-
-		cBioPortalAccessor.setCurrentGeneticProfiles(geneticProfiles);
-		System.out.println("**");
-		System.out.println("Current genetic profile: ");
-
-		for (GeneticProfile geneticProfile : cBioPortalAccessor
-				.getCurrentGeneticProfiles()) {
-			System.out.println("\tgeneticProfile = " + geneticProfile.getName()
-					+ " (" + geneticProfile.getType() + ")");
-		}
-
-		// Save alteration type and numOfCases for minimalistic oncoprints
-		GeneticProfile geneticProfile = cBioPortalAccessor
-				.getCurrentGeneticProfiles().iterator().next();
-		Integer numOfCases = cBioPortalAccessor.getCurrentCaseList().getCases().length;
-
-		// Headers
-		System.out.println("**");
-		System.out.println("Inferred alterations:\n");
-		System.out.println("Gene Name\tStatus\t\tOncoPrint(" + numOfCases
-				+ " cases)");
-
-		
 	}
-
 }
