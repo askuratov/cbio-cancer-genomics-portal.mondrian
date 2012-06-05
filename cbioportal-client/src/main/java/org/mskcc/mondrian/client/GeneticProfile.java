@@ -73,4 +73,8 @@ public class GeneticProfile {
         PROTEIN_ARRAY_PROTEIN_LEVEL,
         PROTEIN_ARRAY_PHOSPHORYLATION;
     }
+    
+    public String toString() {
+    	return name;
+    }
 }

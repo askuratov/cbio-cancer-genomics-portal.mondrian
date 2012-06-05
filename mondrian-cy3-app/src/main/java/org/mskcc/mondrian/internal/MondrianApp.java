@@ -1,14 +1,13 @@
 package org.mskcc.mondrian.internal;
 
 import java.awt.event.ActionEvent;
-import java.io.IOException;
 
 import org.cytoscape.application.swing.AbstractCyAction;
 import org.cytoscape.application.swing.CySwingApplication;
 import org.cytoscape.application.swing.CytoPanel;
 import org.cytoscape.application.swing.CytoPanelName;
 import org.cytoscape.application.swing.CytoPanelState;
-import org.mskcc.mondrian.client.CBioPortalClient;
+import org.cytoscape.work.swing.DialogTaskManager;
 import org.mskcc.mondrian.internal.configuration.ConfigurationChangedEvent;
 import org.mskcc.mondrian.internal.configuration.MondrianConfiguration;
 import org.mskcc.mondrian.internal.configuration.MondrianConfigurationImp;
@@ -24,38 +23,34 @@ import org.mskcc.mondrian.internal.gui.MapControlPanel;
 public class MondrianApp extends AbstractCyAction implements MondrianConfigurationListener {
 	private static final long serialVersionUID = 1935118515626512995L;
 	private CySwingApplication desktopApp;
+	private DialogTaskManager taskManager;
 	private MondrianConfiguration mondrianConfiguration;
 	private MapControlPanel controlPane;
 	private DataTypesPanel dataTypesPane;
 	
 	protected static MondrianApp instance;
-
-    private CBioPortalClient portalClient;
-
-    public static MondrianApp getInstance(CySwingApplication desktopApp) {
+	
+	public static MondrianApp getInstance() {
+		return instance;
+	}
+	
+	public static MondrianApp getInstance(CySwingApplication desktopApp, DialogTaskManager taskManager) {
 		if (instance == null) {
-			instance = new MondrianApp(desktopApp);
+			instance = new MondrianApp(desktopApp, taskManager);
 		}
 		return instance;
 	}
 
-	private MondrianApp(CySwingApplication desktopApp) {
+	private MondrianApp(CySwingApplication desktopApp, DialogTaskManager taskManager) {
 		super("Mondrian");
 		setPreferredMenu("Apps");
 		this.desktopApp = desktopApp;
+		this.taskManager = taskManager;
 		
 		mondrianConfiguration = MondrianConfigurationImp.getInstance();
 
 		this.controlPane = MapControlPanel.getInstance(mondrianConfiguration);
 		this.dataTypesPane = DataTypesPanel.getInstance(mondrianConfiguration);
-
-        try {
-			this.portalClient = new CBioPortalClient();
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-
 	}
 
 	public void actionPerformed(ActionEvent e) {
@@ -94,5 +89,28 @@ public class MondrianApp extends AbstractCyAction implements MondrianConfigurati
 	public void setDataTypesPane(DataTypesPanel dataTypesPane) {
 		this.dataTypesPane = dataTypesPane;
 	}
-	
+
+	public DialogTaskManager getTaskManager() {
+		return taskManager;
+	}
+
+	public void setTaskManager(DialogTaskManager taskManager) {
+		this.taskManager = taskManager;
+	}
+
+	public CySwingApplication getDesktopApp() {
+		return desktopApp;
+	}
+
+	public void setDesktopApp(CySwingApplication desktopApp) {
+		this.desktopApp = desktopApp;
+	}
+
+	public MondrianConfiguration getMondrianConfiguration() {
+		return mondrianConfiguration;
+	}
+
+	public void setMondrianConfiguration(MondrianConfiguration mondrianConfiguration) {
+		this.mondrianConfiguration = mondrianConfiguration;
+	}
 }

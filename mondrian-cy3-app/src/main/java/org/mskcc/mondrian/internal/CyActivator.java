@@ -6,6 +6,7 @@ import org.cytoscape.application.swing.CyAction;
 import org.cytoscape.application.swing.CySwingApplication;
 import org.cytoscape.application.swing.CytoPanelComponent;
 import org.cytoscape.service.util.AbstractCyActivator;
+import org.cytoscape.work.swing.DialogTaskManager;
 import org.osgi.framework.BundleContext;
 
 /**
@@ -17,13 +18,15 @@ public class CyActivator extends AbstractCyActivator {
 	@Override
 	public void start(BundleContext context) throws Exception {
 		CySwingApplication desktop = getService(context,CySwingApplication.class);
+		DialogTaskManager taskManager = getService(context, DialogTaskManager.class);
 		
 		// create our gui
-		MondrianApp container = MondrianApp.getInstance(desktop);
+		MondrianApp container = MondrianApp.getInstance(desktop, taskManager);
 		
 		// TODO: populate the properties
 		registerService(context,container.getDataTypesPane(),CytoPanelComponent.class, new Properties());
 		registerService(context,container.getControlPane(),CytoPanelComponent.class, new Properties());		
-		registerService(context,container,CyAction.class, new Properties());
-    }
+		registerService(context,container,CyAction.class, new Properties());		
+	}
+
 }

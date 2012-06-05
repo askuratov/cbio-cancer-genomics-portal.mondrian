@@ -11,7 +11,13 @@ import javax.swing.JPanel;
 
 import org.cytoscape.application.swing.CytoPanelComponent;
 import org.cytoscape.application.swing.CytoPanelName;
+import org.mskcc.mondrian.internal.MondrianApp;
 import org.mskcc.mondrian.internal.configuration.MondrianConfiguration;
+import javax.swing.border.TitledBorder;
+import javax.swing.JTabbedPane;
+import javax.swing.JButton;
+import java.awt.event.ActionListener;
+import java.awt.event.ActionEvent;
 
 /**
  * Panel in which to manage expression data.
@@ -36,6 +42,28 @@ public class DataTypesPanel extends JPanel implements CytoPanelComponent {
 		JEditorPane pane = new JEditorPane();
 		setLayout(new BorderLayout());
 		add(pane, BorderLayout.CENTER);
+		
+		JTabbedPane tabbedPane = new JTabbedPane(JTabbedPane.TOP);
+		tabbedPane.setBorder(new TitledBorder(null, "Data Management", TitledBorder.LEADING, TitledBorder.TOP, null, null));
+		add(tabbedPane, BorderLayout.NORTH);
+		
+		JPanel panel = new JPanel();
+		panel.setBorder(new TitledBorder(null, "Load Data from Web", TitledBorder.LEADING, TitledBorder.TOP, null, null));
+		tabbedPane.addTab("Load", null, panel, null);
+		
+		JButton btnLoad = new JButton("Load");
+		btnLoad.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent arg0) {
+				PortalImportDialog dialog = PortalImportDialog.getInstance();
+				dialog.setLocationRelativeTo(MondrianApp.getInstance().getDesktopApp().getJFrame());
+				dialog.setModal(true);
+				dialog.setVisible(true);
+			}
+		});
+		panel.add(btnLoad);
+		
+		JPanel panel_1 = new JPanel();
+		tabbedPane.addTab("Save/Unload", null, panel_1, null);
 		this.setVisible(true);
 	}
 

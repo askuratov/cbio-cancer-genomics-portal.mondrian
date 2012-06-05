@@ -51,7 +51,7 @@ public class CBioPortalClient {
             String[] cases = results[4].split(" ");
             assert cases.length > 1;
 
-            caseLists.add(new CaseList(results[0], results[1], cases));
+            caseLists.add(new CaseList(results[0], results[1], results[2], cases));
         }
 
         caseListCache.put(getCurrentCancerStudy(), caseLists);
