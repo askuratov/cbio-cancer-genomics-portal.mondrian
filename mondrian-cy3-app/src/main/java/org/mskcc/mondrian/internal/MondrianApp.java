@@ -2,6 +2,7 @@ package org.mskcc.mondrian.internal;
 
 import java.awt.event.ActionEvent;
 
+import org.cytoscape.application.CyApplicationManager;
 import org.cytoscape.application.swing.AbstractCyAction;
 import org.cytoscape.application.swing.CySwingApplication;
 import org.cytoscape.application.swing.CytoPanel;
@@ -24,6 +25,7 @@ public class MondrianApp extends AbstractCyAction implements MondrianConfigurati
 	private static final long serialVersionUID = 1935118515626512995L;
 	private CySwingApplication desktopApp;
 	private DialogTaskManager taskManager;
+	private CyApplicationManager appManager;
 	private MondrianConfiguration mondrianConfiguration;
 	private MapControlPanel controlPane;
 	private DataTypesPanel dataTypesPane;
@@ -34,18 +36,19 @@ public class MondrianApp extends AbstractCyAction implements MondrianConfigurati
 		return instance;
 	}
 	
-	public static MondrianApp getInstance(CySwingApplication desktopApp, DialogTaskManager taskManager) {
+	public static MondrianApp getInstance(CySwingApplication desktopApp, DialogTaskManager taskManager, CyApplicationManager manager) {
 		if (instance == null) {
-			instance = new MondrianApp(desktopApp, taskManager);
+			instance = new MondrianApp(desktopApp, taskManager, manager);
 		}
 		return instance;
 	}
 
-	private MondrianApp(CySwingApplication desktopApp, DialogTaskManager taskManager) {
+	private MondrianApp(CySwingApplication desktopApp, DialogTaskManager taskManager, CyApplicationManager manager) {
 		super("Mondrian");
 		setPreferredMenu("Apps");
 		this.desktopApp = desktopApp;
 		this.taskManager = taskManager;
+		this.appManager = manager;
 		
 		mondrianConfiguration = MondrianConfigurationImp.getInstance();
 
@@ -113,4 +116,13 @@ public class MondrianApp extends AbstractCyAction implements MondrianConfigurati
 	public void setMondrianConfiguration(MondrianConfiguration mondrianConfiguration) {
 		this.mondrianConfiguration = mondrianConfiguration;
 	}
+
+	public CyApplicationManager getAppManager() {
+		return appManager;
+	}
+
+	public void setAppManager(CyApplicationManager appManager) {
+		this.appManager = appManager;
+	}
+	
 }

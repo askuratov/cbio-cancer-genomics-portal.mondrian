@@ -8,6 +8,7 @@ import java.awt.Point;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.MouseEvent;
+import java.util.Collection;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -25,6 +26,7 @@ import javax.swing.border.TitledBorder;
 import javax.swing.plaf.basic.BasicComboBoxEditor;
 import javax.swing.plaf.basic.BasicComboBoxRenderer;
 
+import org.cytoscape.model.CyColumn;
 import org.cytoscape.work.AbstractTask;
 import org.cytoscape.work.TaskIterator;
 import org.cytoscape.work.TaskMonitor;
@@ -138,7 +140,7 @@ public class PortalImportDialog extends JDialog {
 			{
 				JPanel panel_1 = new JPanel();
 				contentPanel.add(panel_1, BorderLayout.SOUTH);
-				panel_1.setLayout(new GridLayout(2, 1, 0, 0));
+				panel_1.setLayout(new GridLayout(4, 1, 0, 0));
 				{
 					JLabel lblNewLabel_1 = new JLabel("Select Patient/Case Set");
 					panel_1.add(lblNewLabel_1);
@@ -165,6 +167,23 @@ public class PortalImportDialog extends JDialog {
 							return this;
 						}		
 					});
+				}
+				{
+					JLabel lblNewLabel_2 = new JLabel("Select Node Attribute for Gene Symbols");
+					panel_1.add(lblNewLabel_2);
+				}
+				{
+					JComboBox geneSymbolComboBox = new JComboBox();
+					panel_1.add(geneSymbolComboBox);
+					// Get the node attributes from current network
+					
+					Collection<CyColumn> cols = MondrianApp.getInstance().getAppManager().getCurrentNetwork().getDefaultNodeTable().getColumns();
+					String[] values = new String[cols.size()];
+					int i = 0;
+					for (CyColumn col: cols) {
+						values[i++] = col.getName();
+					}
+					geneSymbolComboBox.setModel(new DefaultComboBoxModel(values));
 				}
 			}
 			cancerStudyComboBox.addActionListener(new ActionListener() {

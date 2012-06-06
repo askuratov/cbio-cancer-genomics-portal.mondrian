@@ -1,15 +1,11 @@
 package org.mskcc.mondrian.client.example;
 
-import static org.junit.Assert.*;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 import java.util.logging.Logger;
 
-import junit.framework.Assert;
-
-import org.junit.Test;
 import org.mskcc.mondrian.client.CBioPortalClient;
 import org.mskcc.mondrian.client.CancerStudy;
 import org.mskcc.mondrian.client.CaseList;
