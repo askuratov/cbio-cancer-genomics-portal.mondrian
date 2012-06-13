@@ -143,4 +143,20 @@ public class CBioPortalClient {
     public List<GeneticProfile> getCurrentGeneticProfiles() {
         return currentGeneticProfiles;
     }
+    
+    public DataTypeMatrix getProfileData(CaseList caseList, List<GeneticProfile> profiles, String gene) {
+    	throw new UnsupportedOperationException("Method not implemented yet");
+    }
+    
+    public DataTypeMatrix getProfileData(CaseList caseList, GeneticProfile profile, List<String> genes) throws IOException {
+    	String urlStr = PORTAL_URL + COMMAND + "getProfileData&case_set_id=" + caseList.getId() + "&genetic_profile_id=" + profile.getId() + "&gene_list=";
+    	Iterator<String> it = genes.iterator();
+    	while (it.hasNext()) {
+    		urlStr += it.next();
+    		if (it.hasNext()) urlStr+= "+";
+    	}
+        URL url = new URL(urlStr);
+        URLConnection urlConnection = url.openConnection();    
+        return new DataTypeMatrix(urlConnection.getInputStream(), DataTypeMatrix.DATA_TYPE.GENETIC_PROFILE_FORMAT1);
+    }
 }

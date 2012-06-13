@@ -3,6 +3,8 @@ package org.mskcc.mondrian.client;
 import static org.junit.Assert.*;
 
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.Random;
 import java.util.logging.Logger;
@@ -55,5 +57,8 @@ public class CBioPortalClientTest {
 			assertNotNull(geneticProfile.getName());
 			assertNotNull(geneticProfile.getType());
 		}
+		
+		DataTypeMatrix matrix = portalClient.getProfileData(caseListsForCurrentStudy.get(0), geneticProfilesForCurrentStudy.get(0), Arrays.asList(genes));
+		assertEquals(12, matrix.getNumRows());
 	}
 }

@@ -10,6 +10,7 @@ import java.awt.event.ActionListener;
 import java.awt.event.MouseEvent;
 import java.util.Collection;
 import java.util.List;
+import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -27,6 +28,7 @@ import javax.swing.plaf.basic.BasicComboBoxEditor;
 import javax.swing.plaf.basic.BasicComboBoxRenderer;
 
 import org.cytoscape.model.CyColumn;
+import org.cytoscape.model.CyRow;
 import org.cytoscape.work.AbstractTask;
 import org.cytoscape.work.TaskIterator;
 import org.cytoscape.work.TaskMonitor;
@@ -176,14 +178,43 @@ public class PortalImportDialog extends JDialog {
 					JComboBox geneSymbolComboBox = new JComboBox();
 					panel_1.add(geneSymbolComboBox);
 					// Get the node attributes from current network
-					
 					Collection<CyColumn> cols = MondrianApp.getInstance().getAppManager().getCurrentNetwork().getDefaultNodeTable().getColumns();
-					String[] values = new String[cols.size()];
+					String[] attrs = new String[cols.size()];
+					final String[] toolTips = new String[cols.size()];					
 					int i = 0;
 					for (CyColumn col: cols) {
-						values[i++] = col.getName();
+						attrs[i] = col.getName();
+						List<Object> values = col.getValues(col.getType());
+						String toolTip = "<html><body>";
+						for (int j = 0; j < Math.min(values.size(), 3); j++) {
+							toolTip += values.get(j).toString();
+							if (j < Math.min(values.size(), 3)-1) toolTip += "<br/>";
+						}
+						if (values.size() > 3) toolTip += "<br/>...";
+						toolTip += "</body></html>";
+						toolTips[i] = toolTip;
+						i++;
 					}
-					geneSymbolComboBox.setModel(new DefaultComboBoxModel(values));
+					geneSymbolComboBox.setModel(new DefaultComboBoxModel(attrs));
+					geneSymbolComboBox.setRenderer(new BasicComboBoxRenderer(){
+						public Component getListCellRendererComponent(JList list,
+								Object value, int index, boolean isSelected,
+								boolean cellHasFocus) {
+							if (isSelected) {
+								setBackground(list.getSelectionBackground());
+								setForeground(list.getSelectionForeground());
+								if (-1 < index) {
+									list.setToolTipText(toolTips[index]);
+								}
+							} else {
+								setBackground(list.getBackground());
+								setForeground(list.getForeground());
+							}
+							setFont(list.getFont());
+							setText((value == null) ? "" : value.toString());
+							return this;
+						}		
+					});					
 				}
 			}
 			cancerStudyComboBox.addActionListener(new ActionListener() {
@@ -202,6 +233,11 @@ public class PortalImportDialog extends JDialog {
 			getContentPane().add(buttonPane, BorderLayout.SOUTH);
 			{
 				JButton okButton = new JButton("OK");
+				okButton.addActionListener(new ActionListener() {
+					public void actionPerformed(ActionEvent arg0) {
+						
+					}
+				});
 				okButton.setActionCommand("OK");
 				buttonPane.add(okButton);
 				getRootPane().setDefaultButton(okButton);
