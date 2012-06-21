@@ -9,6 +9,12 @@ import java.util.Map;
 import java.util.Scanner;
 import java.util.StringTokenizer;
 
+/**
+ * A matrix that contains data from the cBio portal response of cmd getProfileData
+ * 
+ * 
+ * @author Dazhi Jiao
+ */
 public class DataTypeMatrix {
 	private static final String DEFAULT_KEY_ATTRIBUTE = "DEFAULT";
 	protected int significanceType = 3;
@@ -20,17 +26,11 @@ public class DataTypeMatrix {
 	private List<String> infoColNames;
 	
 	public static enum DATA_TYPE {
-		EXTENDED_MUTATION, RPPA, GENETIC_PROFILE_FORMAT1, GENETIC_PROFILE_FORMAT2
+		EXTENDED_MUTATION, RPPA, GENETIC_PROFILE_MULTI_GENE, GENETIC_PROFILE_SINGLE_GENE
 	}
 	
 	private String keyAttributeName = DEFAULT_KEY_ATTRIBUTE;
 	
-	/*
-	 * the key attribute name is the attribute by which the expression data is
-	 * matched to the node name.  For instance, this might be a commercial
-	 * probe set ID.
-	 */
-	private boolean mappingByAttribute = false;
 	int numRows;
 	int numCols;
 	
@@ -83,25 +83,27 @@ public class DataTypeMatrix {
 	 * @throws IOException Error loading / parsing the Expression Data File.
 	 */
 	public boolean loadData(InputStream input, DATA_TYPE dataType) throws IOException {
-		if (dataType == DATA_TYPE.GENETIC_PROFILE_FORMAT1) {
+		if (dataType == DATA_TYPE.GENETIC_PROFILE_MULTI_GENE) {
 			infoColNames.add("GENE_ID");
 			infoColNames.add("COMMON");
 			if (DEFAULT_KEY_ATTRIBUTE.equals(keyAttributeName)) keyAttributeName = "COMMON";
-		} else if (dataType == DATA_TYPE.GENETIC_PROFILE_FORMAT2) {
-			
+		} else if (dataType == DATA_TYPE.GENETIC_PROFILE_SINGLE_GENE) {
+			infoColNames.add("GENETIC_PROFILE_ID");
+			infoColNames.add("ALTERATION_TYPE");
+			infoColNames.add("GENE_ID");
+			infoColNames.add("COMMON");
 		} else if (dataType == DATA_TYPE.EXTENDED_MUTATION) {
-			
+			throw new UnsupportedOperationException("EXTENDED_MUTATION type not supported");
 		} else if (dataType == DATA_TYPE.RPPA) {
-			
+			throw new UnsupportedOperationException("RPPA type not supported");
 		}
 
 		if (input == null)
 			return false;
 
 		Scanner scanner = new Scanner(input);
-		//String[] lines = rawText.split(System.getProperty("line.separator"));
 
-		String headerLine = scanner.nextLine(); //lines[lineCount++];
+		String headerLine = scanner.nextLine(); 
 		while (headerLine.startsWith("#")) {  // skip all the comments
 			headerLine = scanner.nextLine();
 		}
@@ -168,6 +170,10 @@ public class DataTypeMatrix {
 		return dataMap.keySet().size();
 	}
 	
+	public List<String> getRowNames() {
+		return new ArrayList<String>(dataMap.keySet());
+	}
+	
 	public List<Double> getDataRow(String key) {
 		return dataMap.get(key);
 	}
@@ -175,41 +181,4 @@ public class DataTypeMatrix {
 	public List<String> getDataColNames() {
 		return this.dataColNames;
 	}
-
-	/**
-	 * Copies ExpressionData data structure into CyAttributes data structure.
-	 *
-	 * @param nodeAttribs Node Attributes Object.
-	 * @param taskMonitor Task Monitor. Can be null.
-	 */
-	/*
-	public void copyToAttribs(CyAttributes nodeAttribs, TaskMonitor taskMonitor) {
-		String[] condNames = getConditionNames();
-
-		for (int condNum = 0; condNum < condNames.length; condNum++) {
-			String condName = condNames[condNum];
-			String eStr = condName + "exp";
-			String sStr = condName + "sig";
-
-			for (int i = 0; i < geneNames.size(); i++) {
-				String canName = (String) geneNames.get(i);
-
-				mRNAMeasurement mm = getMeasurement(canName, condName);
-
-				if (mm != null) {
-					nodeAttribs.setAttribute(canName, eStr, new Double(mm.getRatio()));
-					nodeAttribs.setAttribute(canName, sStr, new Double(mm.getSignificance()));
-				}
-
-				// Report on Progress to the Task Monitor.
-				if (taskMonitor != null) {
-					int currentCoordinate = (condNum * geneNames.size()) + i;
-					int matrixSize = condNames.length * geneNames.size();
-					double percent = ((double) currentCoordinate / matrixSize) * 100.0;
-					taskMonitor.setPercentCompleted((int) percent);
-				}
-			}
-		}
-	}
-	*/
 }

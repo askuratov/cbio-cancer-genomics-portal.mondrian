@@ -8,6 +8,8 @@ import org.cytoscape.application.swing.CySwingApplication;
 import org.cytoscape.application.swing.CytoPanel;
 import org.cytoscape.application.swing.CytoPanelName;
 import org.cytoscape.application.swing.CytoPanelState;
+import org.cytoscape.model.CyTableFactory;
+import org.cytoscape.model.CyTableManager;
 import org.cytoscape.work.swing.DialogTaskManager;
 import org.mskcc.mondrian.internal.configuration.ConfigurationChangedEvent;
 import org.mskcc.mondrian.internal.configuration.MondrianConfiguration;
@@ -26,6 +28,8 @@ public class MondrianApp extends AbstractCyAction implements MondrianConfigurati
 	private CySwingApplication desktopApp;
 	private DialogTaskManager taskManager;
 	private CyApplicationManager appManager;
+	private CyTableFactory tableFactory;
+	private CyTableManager tableManager;
 	private MondrianConfiguration mondrianConfiguration;
 	private MapControlPanel controlPane;
 	private DataTypesPanel dataTypesPane;
@@ -36,19 +40,23 @@ public class MondrianApp extends AbstractCyAction implements MondrianConfigurati
 		return instance;
 	}
 	
-	public static MondrianApp getInstance(CySwingApplication desktopApp, DialogTaskManager taskManager, CyApplicationManager manager) {
+	public static MondrianApp getInstance(CySwingApplication desktopApp, DialogTaskManager taskManager, 
+			CyApplicationManager appManager, CyTableFactory tableFactory, CyTableManager tableManager) {
 		if (instance == null) {
-			instance = new MondrianApp(desktopApp, taskManager, manager);
+			instance = new MondrianApp(desktopApp, taskManager, appManager, tableFactory, tableManager);
 		}
 		return instance;
 	}
 
-	private MondrianApp(CySwingApplication desktopApp, DialogTaskManager taskManager, CyApplicationManager manager) {
+	private MondrianApp(CySwingApplication desktopApp, DialogTaskManager taskManager, CyApplicationManager appManager, 
+			CyTableFactory tableFactory, CyTableManager tableManager) {
 		super("Mondrian");
 		setPreferredMenu("Apps");
 		this.desktopApp = desktopApp;
 		this.taskManager = taskManager;
-		this.appManager = manager;
+		this.appManager = appManager;
+		this.tableFactory = tableFactory;
+		this.tableManager = tableManager;
 		
 		mondrianConfiguration = MondrianConfigurationImp.getInstance();
 
@@ -124,5 +132,21 @@ public class MondrianApp extends AbstractCyAction implements MondrianConfigurati
 	public void setAppManager(CyApplicationManager appManager) {
 		this.appManager = appManager;
 	}
-	
+
+	public CyTableFactory getTableFactory() {
+		return tableFactory;
+	}
+
+	public void setTableFactory(CyTableFactory tableFactory) {
+		this.tableFactory = tableFactory;
+	}
+
+	public CyTableManager getTableManager() {
+		return tableManager;
+	}
+
+	public void setTableManager(CyTableManager tableManager) {
+		this.tableManager = tableManager;
+	}
+
 }

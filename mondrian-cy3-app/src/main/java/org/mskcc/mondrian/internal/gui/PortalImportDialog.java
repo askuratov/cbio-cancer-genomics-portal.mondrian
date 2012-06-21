@@ -12,7 +12,6 @@ import java.awt.event.MouseEvent;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
-import java.util.logging.Logger;
 
 import javax.swing.DefaultComboBoxModel;
 import javax.swing.JButton;
@@ -40,12 +39,13 @@ import org.mskcc.mondrian.client.CaseList;
 import org.mskcc.mondrian.client.DataTypeMatrix;
 import org.mskcc.mondrian.client.GeneticProfile;
 import org.mskcc.mondrian.internal.MondrianApp;
+import org.slf4j.Logger;
 
 public class PortalImportDialog extends JDialog {
 
 	private static final long serialVersionUID = 8533443616371311272L;
 	
-	private static final Logger logger = Logger.getLogger(PortalImportDialog.class.getName());	
+	private static final Logger log = org.slf4j.LoggerFactory.getLogger(PortalImportDialog.class);	
 	
 	private final JPanel contentPanel = new JPanel();
 	private JComboBox cancerStudyComboBox;
@@ -79,6 +79,7 @@ public class PortalImportDialog extends JDialog {
 	/**
 	 * Create the dialog.
 	 */
+	@SuppressWarnings("serial")
 	private PortalImportDialog() {
 		
 		setTitle("Load Data From cBio Portal");
@@ -100,7 +101,6 @@ public class PortalImportDialog extends JDialog {
 						Point point = event.getPoint();
 						// Get the item in the list box at the mouse location
 						int index = this.locationToIndex(point);
-						Object item = getModel().getElementAt(index);
 						// Get the value of the item in the list
 						return ((GeneticProfile) this.getModel().getElementAt(index)).getDescription();
 					}
@@ -179,7 +179,6 @@ public class PortalImportDialog extends JDialog {
 					Collection<CyColumn> cols = MondrianApp.getInstance().getAppManager().getCurrentNetwork().getDefaultNodeTable().getColumns();
 					List<String> attrs = new ArrayList<String>();
 					final List<String> toolTips = new ArrayList<String>();
-					int i = 0;
 					for (CyColumn col: cols) {
 						if (col.getType() != String.class) {
 							continue;  // Looking for gene symbols, which should be String column
@@ -194,7 +193,6 @@ public class PortalImportDialog extends JDialog {
 						if (values.size() > 3) toolTip += "<br/>...";
 						toolTip += "</body></html>";
 						toolTips.add(toolTip);
-						i++;
 					}
 					geneSymbolComboBox.setModel(new DefaultComboBoxModel(attrs.toArray(new String[attrs.size()])));
 					geneSymbolComboBox.setRenderer(new BasicComboBoxRenderer(){
@@ -298,26 +296,35 @@ public class PortalImportDialog extends JDialog {
 			CaseList caseList = (CaseList)caseSetComboBox.getSelectedItem();
 			Object[] profiles = profileList.getSelectedValues();
 			String geneSymbolField = (String)geneSymbolComboBox.getSelectedItem();
-			CyTable table = MondrianApp.getInstance().getAppManager().getCurrentNetwork().getDefaultNodeTable();
-			CyColumn col = table.getColumn(geneSymbolField);
+			CyTable defaultTable = MondrianApp.getInstance().getAppManager().getCurrentNetwork().getDefaultNodeTable();
+			CyColumn col = defaultTable.getColumn(geneSymbolField);
+			@SuppressWarnings("unchecked")
 			List<String> genes = col.getValues((Class<String>)col.getType());
 			
-			List<CyRow> rows = table.getAllRows();
 			// Extract data from web service
-			for (Object profile: profiles) {
+			for (Object obj: profiles) {
+				GeneticProfile profile = (GeneticProfile)obj;
+				System.out.println(profile.getName());
 				// TODO: Need to check for duplicate column names in multiple data matrices
-				DataTypeMatrix matrix = portalClient.getProfileData(caseList, (GeneticProfile)profile, genes);
+				CyTable table = MondrianApp.getInstance().getTableFactory().createTable(profile.getName(), profile.getId(), String.class, true, true);
+				DataTypeMatrix matrix = portalClient.getProfileData(caseList, profile, genes);
+
 				List<String> dataColNames = matrix.getDataColNames();
 				for (String colName: dataColNames) {
 					table.createColumn(colName, Double.class, false);
 				}
-				for (CyRow row: rows) {
-					String geneSymbol = row.get(geneSymbolField, String.class);
-					List<Double> dataRow = matrix.getDataRow(geneSymbol);
-					for (int i = 0; i < dataRow.size(); i++) {
-						row.set(dataColNames.get(i), dataRow.get(i));
+				
+				// Add rows
+				for (String rowName: matrix.getRowNames()) {
+					CyRow row = table.getRow(rowName);
+					int i = 0; 
+					for (String colName: dataColNames) {
+						row.set(colName, matrix.getDataRow(rowName).get(i++));
 					}
 				}
+				log.debug("Insert Table: " + matrix.getNumRows() + ", " + matrix.getDataColNames().size());
+				System.out.println("Insert Table: " + matrix.getNumRows() + ", " + matrix.getDataColNames().size());
+				MondrianApp.getInstance().getTableManager().addTable(table);
 			}
 		}
 	}
