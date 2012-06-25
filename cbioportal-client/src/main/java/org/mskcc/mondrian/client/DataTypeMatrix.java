@@ -9,6 +9,8 @@ import java.util.Map;
 import java.util.Scanner;
 import java.util.StringTokenizer;
 
+import org.mskcc.mondrian.client.GeneticProfile.GENETIC_PROFILE_TYPE;
+
 /**
  * A matrix that contains data from the cBio portal response of cmd getProfileData
  * 
@@ -20,27 +22,32 @@ public class DataTypeMatrix {
 	protected int significanceType = 3;
 
 	private Map<String, List<String>> infoMap;
-	private Map<String, List<Double>> dataMap;
+	private Map<String, List<? extends Object>> dataMap;
 	
 	private List<String> dataColNames;
 	private List<String> infoColNames;
 	
+	private GeneticProfile.GENETIC_PROFILE_TYPE profileType;
+	
 	public static enum DATA_TYPE {
-		EXTENDED_MUTATION, RPPA, GENETIC_PROFILE_MULTI_GENE, GENETIC_PROFILE_SINGLE_GENE
+		GENETIC_PROFILE_MULTI_GENE, GENETIC_PROFILE_SINGLE_GENE
 	}
+	
+	public Class<?> dataClass;
 	
 	private String keyAttributeName = DEFAULT_KEY_ATTRIBUTE;
 	
 	int numRows;
 	int numCols;
 	
-	public DataTypeMatrix(InputStream input, DATA_TYPE dataType) throws IOException {
-		this(input, dataType, DEFAULT_KEY_ATTRIBUTE);		
+	public DataTypeMatrix(InputStream input, DATA_TYPE dataType, GeneticProfile.GENETIC_PROFILE_TYPE profileType) throws IOException {
+		this(input, dataType, profileType, DEFAULT_KEY_ATTRIBUTE);		
 	}
 	
-	public DataTypeMatrix(InputStream input, DATA_TYPE dataType, String keyAttributeName) throws IOException {
+	public DataTypeMatrix(InputStream input, DATA_TYPE dataType, GeneticProfile.GENETIC_PROFILE_TYPE profileType, String keyAttributeName) throws IOException {
 		numRows = 0;
 		numCols = 0;
+		this.profileType = profileType;
 		this.keyAttributeName = keyAttributeName;
 		this.initDataStructures();
 		this.loadData(input, dataType);
@@ -71,7 +78,7 @@ public class DataTypeMatrix {
 		if (dataMap != null) {
 			dataMap.clear();
 		} else {
-			dataMap = new HashMap<String, List<Double>>();
+			dataMap = new HashMap<String, List<? extends Object>>();
 		}
 	}
 
@@ -92,11 +99,8 @@ public class DataTypeMatrix {
 			infoColNames.add("ALTERATION_TYPE");
 			infoColNames.add("GENE_ID");
 			infoColNames.add("COMMON");
-		} else if (dataType == DATA_TYPE.EXTENDED_MUTATION) {
-			throw new UnsupportedOperationException("EXTENDED_MUTATION type not supported");
-		} else if (dataType == DATA_TYPE.RPPA) {
-			throw new UnsupportedOperationException("RPPA type not supported");
-		}
+			if (DEFAULT_KEY_ATTRIBUTE.equals(keyAttributeName)) keyAttributeName = "COMMON";
+		} 
 
 		if (input == null)
 			return false;
@@ -154,16 +158,38 @@ public class DataTypeMatrix {
 			if (infoColNames.get(i).equals(keyAttributeName)) 
 				key = tok;
 		}
+		infoMap.put(key, infoList);		
 		
-		List<Double> dataList = new ArrayList<Double>();
-		/* the rest tokens are data */
-		while (strtok.hasMoreTokens()) {
-			String tok = strtok.nextToken();
-			dataList.add(Double.parseDouble(tok));
+		if (this.profileType == GENETIC_PROFILE_TYPE.MUTATION_EXTENDED) {
+			List<String> dataList = new ArrayList<String>();
+			while (strtok.hasMoreTokens()) {
+				String tok = strtok.nextToken();
+				if (this.profileType == GENETIC_PROFILE_TYPE.MUTATION_EXTENDED) {
+					dataList.add(tok);
+				}
+			}
+			dataMap.put(key, dataList);
+		} else {
+			List<Double> dataList = new ArrayList<Double>();
+			/* the rest tokens are data */
+			while (strtok.hasMoreTokens()) {
+				String tok = strtok.nextToken();
+
+				if ("NA".equals(tok)) {
+					dataList.add(Double.NaN);
+				} else {
+					try {
+						dataList.add(Double.parseDouble(tok));
+					} catch (Exception ex) {
+						System.out.println("Token wrong format: " + tok);
+						//ex.printStackTrace();
+						dataList.add(Double.NaN); // not a number
+					}
+				}
+			}
+			dataMap.put(key, dataList);
 		}
 		
-		infoMap.put(key, infoList);
-		dataMap.put(key, dataList);
 	} // parseOneLine
 	
 	public int getNumRows() {
@@ -174,7 +200,7 @@ public class DataTypeMatrix {
 		return new ArrayList<String>(dataMap.keySet());
 	}
 	
-	public List<Double> getDataRow(String key) {
+	public List<? extends Object> getDataRow(String key) {
 		return dataMap.get(key);
 	}
 	

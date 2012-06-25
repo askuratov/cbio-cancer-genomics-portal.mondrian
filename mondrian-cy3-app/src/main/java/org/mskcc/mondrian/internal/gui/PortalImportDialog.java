@@ -38,6 +38,7 @@ import org.mskcc.mondrian.client.CancerStudy;
 import org.mskcc.mondrian.client.CaseList;
 import org.mskcc.mondrian.client.DataTypeMatrix;
 import org.mskcc.mondrian.client.GeneticProfile;
+import org.mskcc.mondrian.client.GeneticProfile.GENETIC_PROFILE_TYPE;
 import org.mskcc.mondrian.internal.MondrianApp;
 import org.slf4j.Logger;
 
@@ -292,7 +293,7 @@ public class PortalImportDialog extends JDialog {
 	
 	class ImportDataTask extends AbstractTask {
 		@Override
-		public void run(TaskMonitor arg0) throws Exception {
+		public void run(TaskMonitor taskMonitor) throws Exception {
 			CaseList caseList = (CaseList)caseSetComboBox.getSelectedItem();
 			Object[] profiles = profileList.getSelectedValues();
 			String geneSymbolField = (String)geneSymbolComboBox.getSelectedItem();
@@ -302,16 +303,22 @@ public class PortalImportDialog extends JDialog {
 			List<String> genes = col.getValues((Class<String>)col.getType());
 			
 			// Extract data from web service
+			int p = 1; 
 			for (Object obj: profiles) {
 				GeneticProfile profile = (GeneticProfile)obj;
-				System.out.println(profile.getName());
-				// TODO: Need to check for duplicate column names in multiple data matrices
+				taskMonitor.setStatusMessage("Loading genetic profile: " + profile.getName());
+				taskMonitor.setProgress(p++/(double)profiles.length);
+
 				CyTable table = MondrianApp.getInstance().getTableFactory().createTable(profile.getName(), profile.getId(), String.class, true, true);
 				DataTypeMatrix matrix = portalClient.getProfileData(caseList, profile, genes);
 
 				List<String> dataColNames = matrix.getDataColNames();
 				for (String colName: dataColNames) {
-					table.createColumn(colName, Double.class, false);
+					if (profile.getType() == GENETIC_PROFILE_TYPE.MUTATION_EXTENDED) {
+						table.createColumn(colName, String.class, false);
+					} else {
+						table.createColumn(colName, Double.class, false);
+					}
 				}
 				
 				// Add rows
@@ -322,9 +329,10 @@ public class PortalImportDialog extends JDialog {
 						row.set(colName, matrix.getDataRow(rowName).get(i++));
 					}
 				}
-				log.debug("Insert Table: " + matrix.getNumRows() + ", " + matrix.getDataColNames().size());
-				System.out.println("Insert Table: " + matrix.getNumRows() + ", " + matrix.getDataColNames().size());
+				log.debug("Loading genetic profile: " + profile.getName() + "; Insert Table: " + matrix.getNumRows() + ", " + matrix.getDataColNames().size());
+				
 				MondrianApp.getInstance().getTableManager().addTable(table);
+				
 			}
 		}
 	}

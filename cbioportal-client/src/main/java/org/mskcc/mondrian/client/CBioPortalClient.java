@@ -157,6 +157,6 @@ public class CBioPortalClient {
     	}
         URL url = new URL(urlStr);
         URLConnection urlConnection = url.openConnection();    
-        return new DataTypeMatrix(urlConnection.getInputStream(), DataTypeMatrix.DATA_TYPE.GENETIC_PROFILE_MULTI_GENE);
+        return new DataTypeMatrix(urlConnection.getInputStream(), DataTypeMatrix.DATA_TYPE.GENETIC_PROFILE_MULTI_GENE, profile.getType());
     }
 }

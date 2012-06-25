@@ -8,7 +8,7 @@ package org.mskcc.mondrian.internal.configuration;
  */
 public class ConfigurationChangedEvent extends java.util.EventObject {
 	private static final long serialVersionUID = 5674382874417010725L;
-	// refs to states
+
 	private final boolean rangeChanged;
 	private final boolean networkChanged;
 	private final boolean colorThemeChanged;
