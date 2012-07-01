@@ -1,5 +1,9 @@
 package org.mskcc.mondrian.internal.configuration;
 
+import org.mskcc.mondrian.client.DataTypeMatrix;
+import org.mskcc.mondrian.internal.colorgradient.ColorGradientRange;
+import org.mskcc.mondrian.internal.colorgradient.ColorGradientTheme;
+
 /**
  * Interface implemented by class which maintains configuration.
  *
@@ -21,92 +25,57 @@ public interface MondrianConfiguration {
 	 */
 	public void removedConfigurationListener(MondrianConfigurationListener listener);
 
-//	/**
-//	 * Method used to set color gradient range (min, center-low, center-high, max)
-//	 * Note: "origX values will be ignored.
-//	 *
-//	 * @param colorGradientRange ColorGradientRange
-//	 */
-//	public void setColorGradientRange(ColorGradientRange colorGradientRange);
-//
-//	/**
-//	 * Method used to get current gradient range.
-//	 *
-//	 * @return GradientRange
-//	 */
-//	public ColorGradientRange getColorGradientRange();
-//
-//	/**
-//	 * Method used to get current gradient range.
-//	 *
-//	 * @param dataTypeMatrix DataTypeMatrix
-//	 * @return GradientRange
-//	 */
-//	public ColorGradientRange getColorGradientRange(DataTypeMatrix dataTypeMatrix);
-//
-//    /**
-//     * Method used to get the gradient color theme.
-//     *
-//     * @return ColorGradientTheme Object.
-//     */
-//    public ColorGradientTheme getColorTheme();
-//
-//    /**
-//     * Method used to set the color theme.
-//     *
-//     * @param colorGradientTheme ColorGradientTheme
-//     */
-//    public void setColorTheme(ColorGradientTheme colorGradientTheme);
-//
-//    /**
-//     * Method used to get the Data Type Selected DATA_TYPE.
-//     *
-//     * @return DataTypeMatrixMatrixManager.DATA_TYPE.
-//     */
-//    public String getDataTypeMatrixType();
-//
-//    /**
-//     * Method used to get the data type matrix.
-//     *
-//     * @return DataTypeMatrix
-//     */
-//    public DataTypeMatrix getDataTypeMatrix();
-//
-//    /**
-//     * Method used to set the data type matrix.
-//     *
-//     * @param dataTypeMatrix DataTypeMatrix
-//     */
-//    public void setDataTypeMatrix(DataTypeMatrix dataTypeMatrix);
-//
-//    /**
-//     * Method used to unload the data type matrix.
-//     *
-//     * @param dataTypeMatrix DataTypeMatrix
-//     */
-//    public void unloadDataTypeMatrix(DataTypeMatrix dataTypeMatrix);
-//
-//    /**
-//     * Method used to get the current CyNetwork.
-//     *
-//     * @return CyNetwork
-//     */
-//    public CyNetwork getCyNetwork();
-//
-//    /**
-//     * Method used to set the CyNetwork.
-//     *
-//     * @param cyNetwork CyNetwork
-//     */
-//    public void setCyNetwork(CyNetwork cyNetwork);
-//
-//    /**
-//     * Method used to remove the current CyNetwork reference.
-//	 *
-//	 * notifyListeners boolean
-//     */
-//    public void removeCyNetwork(boolean notifyListeners);
-//
+	/**
+	 * Method used to set color gradient range (min, center-low, center-high, max)
+	 * Note: "origX values will be ignored.
+	 *
+	 * @param colorGradientRange ColorGradientRange
+	 */
+	public void setColorGradientRange(ColorGradientRange colorGradientRange);
+
+	/**
+	 * Method used to get current gradient range.
+	 *
+	 * @return GradientRange
+	 */
+	public ColorGradientRange getColorGradientRange();
+
+	/**
+	 * Method used to get current gradient range.
+	 *
+	 * @param dataTypeMatrix DataTypeMatrix
+	 * @return GradientRange
+	 */
+	public ColorGradientRange getColorGradientRange(DataTypeMatrix dataTypeMatrix);
+
+    /**
+     * Method used to get the gradient color theme.
+     *
+     * @return ColorGradientTheme Object.
+     */
+    public ColorGradientTheme getColorTheme();
+
+    /**
+     * Method used to set the color theme.
+     *
+     * @param colorGradientTheme ColorGradientTheme
+     */
+    public void setColorTheme(ColorGradientTheme colorGradientTheme);
+
+    /**
+     * Method used to get the Data Type Selected DATA_TYPE.
+     *
+     * @return DataTypeMatrixMatrixManager.DATA_TYPE.
+     */
+    public String getDataTypeMatrixType();
+
+    /**
+     * Method used to get the data type matrix.
+     *
+     * @return DataTypeMatrix
+     */
+    public DataTypeMatrix getDataTypeMatrix();
+
 //    /**
 //     * Method used to get the current heatmap panel configuration.
 //     *
@@ -128,60 +97,60 @@ public interface MondrianConfiguration {
 //     * @param heatmapPanelConfiguration HeatmapPanelConfiguration
 //     */
 //    public void setHeatmapPanelConfiguration(HeatmapPanelConfiguration heatmapPanelConfiguration);
-//
-//	/**
-//	 * Method used to fire event to remap viz style on cynetwork.
-//	 * Motivated by integration with pathwaycommons, see NetworkEventListener for more info.
-//	 */
-//	public void remapCyNetwork();
-//
-//	/**
-//	 * Method to set network zoom preference.
-//	 * If true, network view will pan/zoom over gene of interest
-//	 * as user navigates the heatmap panel.
-//	 *
-//	 * @param networkZoom boolean
-//	 */
-//	public void setNetworkZoom(boolean networkZoom);
-//
-//	/**
-//	 * Method to get network zoom preference.
-//	 *
-//	 * @return boolean
-//	 */
-//	public boolean getNetworkZoom();
-//
-//	/**
-//	 * Method to set network zoom key preference.
-//	 * If true, network view will pan/zoom over gene of interest
-//	 * as user navigates the heatmap panel on if shift key is being held.
-//	 *
-//	 * @param networkZoomKey boolean
-//	 */
-//	public void setNetworkZoomKey(boolean networkZoomKey);
-//
-//	/**
-//	 * Method to get network zoom preference.
-//	 *
-//	 * @return boolean
-//	 */
-//	public boolean getNetworkZoomKey();
-//
-//	/**
-//	 * Method to set custom node preference, display multiple data-
-//	 * type on each node.
-//	 *
-//	 * @param displayMultipleDataTypeNodes boolean
-//	 */
-//	public void setDisplayMultipleDataTypeNodes(boolean displayMultipleDataTypeNodes);
-//
-//	/**
-//	 * Method to get display multiple data type node.
-//	 *
-//	 * @return boolean
-//	 */
-//	public boolean getDisplayMultipleDataTypeNodes();
-//
+
+	/**
+	 * Method used to fire event to remap viz style on cynetwork.
+	 * Motivated by integration with pathwaycommons, see NetworkEventListener for more info.
+	 */
+	public void remapCyNetwork();
+
+	/**
+	 * Method to set network zoom preference.
+	 * If true, network view will pan/zoom over gene of interest
+	 * as user navigates the heatmap panel.
+	 *
+	 * @param networkZoom boolean
+	 */
+	public void setNetworkZoom(boolean networkZoom);
+
+	/**
+	 * Method to get network zoom preference.
+	 *
+	 * @return boolean
+	 */
+	public boolean getNetworkZoom();
+
+	/**
+	 * Method to set network zoom key preference.
+	 * If true, network view will pan/zoom over gene of interest
+	 * as user navigates the heatmap panel on if shift key is being held.
+	 *
+	 * @param networkZoomKey boolean
+	 */
+	public void setNetworkZoomKey(boolean networkZoomKey);
+
+	/**
+	 * Method to get network zoom preference.
+	 *
+	 * @return boolean
+	 */
+	public boolean getNetworkZoomKey();
+
+	/**
+	 * Method to set custom node preference, display multiple data-
+	 * type on each node.
+	 *
+	 * @param displayMultipleDataTypeNodes boolean
+	 */
+	public void setDisplayMultipleDataTypeNodes(boolean displayMultipleDataTypeNodes);
+
+	/**
+	 * Method to get display multiple data type node.
+	 *
+	 * @return boolean
+	 */
+	public boolean getDisplayMultipleDataTypeNodes();
+
 //	/**
 //	 * Method is called to get heatstrip display boolean.
 //	 *

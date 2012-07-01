@@ -11,7 +11,9 @@ import java.awt.event.ActionListener;
 import java.awt.event.MouseEvent;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import javax.swing.DefaultComboBoxModel;
 import javax.swing.JButton;
@@ -27,6 +29,9 @@ import javax.swing.border.TitledBorder;
 import javax.swing.plaf.basic.BasicComboBoxRenderer;
 
 import org.cytoscape.model.CyColumn;
+import org.cytoscape.model.CyIdentifiable;
+import org.cytoscape.model.CyNetwork;
+import org.cytoscape.model.CyNode;
 import org.cytoscape.model.CyRow;
 import org.cytoscape.model.CyTable;
 import org.cytoscape.work.AbstractTask;
@@ -298,9 +303,14 @@ public class PortalImportDialog extends JDialog {
 			Object[] profiles = profileList.getSelectedValues();
 			String geneSymbolField = (String)geneSymbolComboBox.getSelectedItem();
 			CyTable defaultTable = MondrianApp.getInstance().getAppManager().getCurrentNetwork().getDefaultNodeTable();
-			CyColumn col = defaultTable.getColumn(geneSymbolField);
-			@SuppressWarnings("unchecked")
-			List<String> genes = col.getValues((Class<String>)col.getType());
+			List<CyRow> rows = defaultTable.getAllRows();
+			Map<String, Long> geneSymbolMap = new HashMap<String, Long>(); 
+			for (CyRow cyRow : rows) {
+				String geneSymbol = cyRow.get(geneSymbolField, String.class);
+				Long suid = cyRow.get(CyIdentifiable.SUID, Long.class);
+				geneSymbolMap.put(geneSymbol, suid);
+			}
+			List<String> genes = new ArrayList<String>(geneSymbolMap.keySet());
 			
 			// Extract data from web service
 			int p = 1; 
@@ -309,9 +319,14 @@ public class PortalImportDialog extends JDialog {
 				taskMonitor.setStatusMessage("Loading genetic profile: " + profile.getName());
 				taskMonitor.setProgress(p++/(double)profiles.length);
 
-				CyTable table = MondrianApp.getInstance().getTableFactory().createTable(profile.getName(), profile.getId(), String.class, true, true);
+				CyTable table = MondrianApp.getInstance().getTableFactory().createTable(profile.getName(), CyIdentifiable.SUID, 
+						Long.class, true, true);
 				DataTypeMatrix matrix = portalClient.getProfileData(caseList, profile, genes);
 
+				// Create a few default columns
+				table.createColumn("selected", Boolean.class, true);
+				table.createColumn(geneSymbolField, String.class, false);
+				
 				List<String> dataColNames = matrix.getDataColNames();
 				for (String colName: dataColNames) {
 					if (profile.getType() == GENETIC_PROFILE_TYPE.MUTATION_EXTENDED) {
@@ -323,7 +338,10 @@ public class PortalImportDialog extends JDialog {
 				
 				// Add rows
 				for (String rowName: matrix.getRowNames()) {
-					CyRow row = table.getRow(rowName);
+					long suid = geneSymbolMap.get(rowName); 
+					CyRow row = table.getRow(suid);
+					row.set("selected", defaultTable.getRow(suid).get("selected", Boolean.class));
+					row.set(geneSymbolField, rowName);
 					int i = 0; 
 					for (String colName: dataColNames) {
 						row.set(colName, matrix.getDataRow(rowName).get(i++));
@@ -331,8 +349,10 @@ public class PortalImportDialog extends JDialog {
 				}
 				log.debug("Loading genetic profile: " + profile.getName() + "; Insert Table: " + matrix.getNumRows() + ", " + matrix.getDataColNames().size());
 				
-				MondrianApp.getInstance().getTableManager().addTable(table);
-				
+				MondrianApp app = MondrianApp.getInstance();
+				app.getTableManager().addTable(table);
+				CyNetwork network = app.getAppManager().getCurrentNetwork();
+				app.getNetworkTableMangager().setTable(network, CyNode.class, profile.getId(), table);
 			}
 		}
 	}

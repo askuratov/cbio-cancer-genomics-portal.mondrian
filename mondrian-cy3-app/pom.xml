@@ -142,11 +142,5 @@
         	<version>3.0.0-beta2-SNAPSHOT</version>
         	<type>bundle</type>
         </dependency>
-        
-        <dependency>
-<groupId>org.cytoscape</groupId>
-<artifactId>core-task-api</artifactId>
-<version>[3.0.0-beta1,4.0.0]</version>
-</dependency>
 	</dependencies>
 </project>

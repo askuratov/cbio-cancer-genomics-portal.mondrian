@@ -8,12 +8,13 @@ import org.cytoscape.application.swing.CySwingApplication;
 import org.cytoscape.application.swing.CytoPanel;
 import org.cytoscape.application.swing.CytoPanelName;
 import org.cytoscape.application.swing.CytoPanelState;
+import org.cytoscape.model.CyNetworkTableManager;
 import org.cytoscape.model.CyTableFactory;
 import org.cytoscape.model.CyTableManager;
 import org.cytoscape.work.swing.DialogTaskManager;
 import org.mskcc.mondrian.internal.configuration.ConfigurationChangedEvent;
 import org.mskcc.mondrian.internal.configuration.MondrianConfiguration;
-import org.mskcc.mondrian.internal.configuration.MondrianConfigurationImp;
+import org.mskcc.mondrian.internal.configuration.MondrianConfigurationImpl;
 import org.mskcc.mondrian.internal.configuration.MondrianConfigurationListener;
 import org.mskcc.mondrian.internal.gui.DataTypesPanel;
 import org.mskcc.mondrian.internal.gui.MapControlPanel;
@@ -30,9 +31,11 @@ public class MondrianApp extends AbstractCyAction implements MondrianConfigurati
 	private CyApplicationManager appManager;
 	private CyTableFactory tableFactory;
 	private CyTableManager tableManager;
+	private CyNetworkTableManager networkTableMangager;
 	private MondrianConfiguration mondrianConfiguration;
 	private MapControlPanel controlPane;
 	private DataTypesPanel dataTypesPane;
+	
 	
 	protected static MondrianApp instance;
 	
@@ -41,15 +44,16 @@ public class MondrianApp extends AbstractCyAction implements MondrianConfigurati
 	}
 	
 	public static MondrianApp getInstance(CySwingApplication desktopApp, DialogTaskManager taskManager, 
-			CyApplicationManager appManager, CyTableFactory tableFactory, CyTableManager tableManager) {
+			CyApplicationManager appManager, CyTableFactory tableFactory, CyTableManager tableManager,
+			CyNetworkTableManager networkTableManager) {
 		if (instance == null) {
-			instance = new MondrianApp(desktopApp, taskManager, appManager, tableFactory, tableManager);
+			instance = new MondrianApp(desktopApp, taskManager, appManager, tableFactory, tableManager, networkTableManager);
 		}
 		return instance;
 	}
 
 	private MondrianApp(CySwingApplication desktopApp, DialogTaskManager taskManager, CyApplicationManager appManager, 
-			CyTableFactory tableFactory, CyTableManager tableManager) {
+			CyTableFactory tableFactory, CyTableManager tableManager, CyNetworkTableManager networkTableManager) {
 		super("Mondrian");
 		setPreferredMenu("Apps");
 		this.desktopApp = desktopApp;
@@ -57,8 +61,9 @@ public class MondrianApp extends AbstractCyAction implements MondrianConfigurati
 		this.appManager = appManager;
 		this.tableFactory = tableFactory;
 		this.tableManager = tableManager;
+		this.networkTableMangager = networkTableManager;
 		
-		mondrianConfiguration = MondrianConfigurationImp.getInstance();
+		mondrianConfiguration = new MondrianConfigurationImpl();
 
 		this.controlPane = MapControlPanel.getInstance(mondrianConfiguration);
 		this.dataTypesPane = DataTypesPanel.getInstance(mondrianConfiguration);
@@ -149,4 +154,11 @@ public class MondrianApp extends AbstractCyAction implements MondrianConfigurati
 		this.tableManager = tableManager;
 	}
 
+	public CyNetworkTableManager getNetworkTableMangager() {
+		return networkTableMangager;
+	}
+
+	public void setNetworkTableMangager(CyNetworkTableManager networkTableMangager) {
+		this.networkTableMangager = networkTableMangager;
+	}
 }

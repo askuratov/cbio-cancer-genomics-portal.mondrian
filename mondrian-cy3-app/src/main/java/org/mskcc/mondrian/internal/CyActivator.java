@@ -6,6 +6,7 @@ import org.cytoscape.application.CyApplicationManager;
 import org.cytoscape.application.swing.CyAction;
 import org.cytoscape.application.swing.CySwingApplication;
 import org.cytoscape.application.swing.CytoPanelComponent;
+import org.cytoscape.model.CyNetworkTableManager;
 import org.cytoscape.model.CyTableFactory;
 import org.cytoscape.model.CyTableManager;
 import org.cytoscape.service.util.AbstractCyActivator;
@@ -25,9 +26,10 @@ public class CyActivator extends AbstractCyActivator {
 		CyApplicationManager manager = getService(bc,CyApplicationManager.class);
 		CyTableFactory tableFactory = getService(bc, CyTableFactory.class);
 		CyTableManager tableManager = getService(bc,CyTableManager.class);
+		CyNetworkTableManager networkTableManager = getService(bc, CyNetworkTableManager.class);
 		
 		// create our gui
-		MondrianApp container = MondrianApp.getInstance(desktop, taskManager, manager, tableFactory, tableManager);
+		MondrianApp container = MondrianApp.getInstance(desktop, taskManager, manager, tableFactory, tableManager, networkTableManager);
 		
 		// TODO: populate the properties
 		registerService(bc,container.getDataTypesPane(),CytoPanelComponent.class, new Properties());
