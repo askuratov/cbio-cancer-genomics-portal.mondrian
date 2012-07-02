@@ -27,6 +27,7 @@ import java.util.HashMap;
  * 
  * @author Benjamin Gross
  */
+@SuppressWarnings("serial")
 public class HeatMapTable extends JTable {
 
 	/**

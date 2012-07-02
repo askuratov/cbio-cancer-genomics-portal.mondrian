@@ -8,16 +8,18 @@ import org.cytoscape.application.swing.CySwingApplication;
 import org.cytoscape.application.swing.CytoPanel;
 import org.cytoscape.application.swing.CytoPanelName;
 import org.cytoscape.application.swing.CytoPanelState;
+import org.cytoscape.model.CyNetworkManager;
 import org.cytoscape.model.CyNetworkTableManager;
 import org.cytoscape.model.CyTableFactory;
 import org.cytoscape.model.CyTableManager;
 import org.cytoscape.work.swing.DialogTaskManager;
 import org.mskcc.mondrian.internal.configuration.ConfigurationChangedEvent;
 import org.mskcc.mondrian.internal.configuration.MondrianConfiguration;
-import org.mskcc.mondrian.internal.configuration.MondrianConfigurationImpl;
+import org.mskcc.mondrian.internal.configuration.MondrianConfiguration;
 import org.mskcc.mondrian.internal.configuration.MondrianConfigurationListener;
 import org.mskcc.mondrian.internal.gui.DataTypesPanel;
 import org.mskcc.mondrian.internal.gui.MapControlPanel;
+import org.mskcc.mondrian.internal.gui.heatmap.HeatMapPanel;
 
 /**
  * The Mondrian App
@@ -27,13 +29,14 @@ import org.mskcc.mondrian.internal.gui.MapControlPanel;
 public class MondrianApp extends AbstractCyAction implements MondrianConfigurationListener {
 	private static final long serialVersionUID = 1935118515626512995L;
 	private CySwingApplication desktopApp;
+	private CyNetworkManager networkManager;
 	private DialogTaskManager taskManager;
 	private CyApplicationManager appManager;
 	private CyTableFactory tableFactory;
 	private CyTableManager tableManager;
 	private CyNetworkTableManager networkTableMangager;
 	private MondrianConfiguration mondrianConfiguration;
-	private MapControlPanel controlPane;
+	private HeatMapPanel controlPane;
 	private DataTypesPanel dataTypesPane;
 	
 	
@@ -43,29 +46,30 @@ public class MondrianApp extends AbstractCyAction implements MondrianConfigurati
 		return instance;
 	}
 	
-	public static MondrianApp getInstance(CySwingApplication desktopApp, DialogTaskManager taskManager, 
+	public static MondrianApp getInstance(CySwingApplication desktopApp, CyNetworkManager networkManager, DialogTaskManager taskManager, 
 			CyApplicationManager appManager, CyTableFactory tableFactory, CyTableManager tableManager,
 			CyNetworkTableManager networkTableManager) {
 		if (instance == null) {
-			instance = new MondrianApp(desktopApp, taskManager, appManager, tableFactory, tableManager, networkTableManager);
+			instance = new MondrianApp(desktopApp, networkManager, taskManager, appManager, tableFactory, tableManager, networkTableManager);
 		}
 		return instance;
 	}
 
-	private MondrianApp(CySwingApplication desktopApp, DialogTaskManager taskManager, CyApplicationManager appManager, 
+	private MondrianApp(CySwingApplication desktopApp, CyNetworkManager networkManager, DialogTaskManager taskManager, CyApplicationManager appManager, 
 			CyTableFactory tableFactory, CyTableManager tableManager, CyNetworkTableManager networkTableManager) {
 		super("Mondrian");
 		setPreferredMenu("Apps");
 		this.desktopApp = desktopApp;
+		this.networkManager = networkManager;
 		this.taskManager = taskManager;
 		this.appManager = appManager;
 		this.tableFactory = tableFactory;
 		this.tableManager = tableManager;
 		this.networkTableMangager = networkTableManager;
 		
-		mondrianConfiguration = new MondrianConfigurationImpl();
+		mondrianConfiguration = new MondrianConfiguration();
 
-		this.controlPane = MapControlPanel.getInstance(mondrianConfiguration);
+		this.controlPane = new HeatMapPanel();
 		this.dataTypesPane = DataTypesPanel.getInstance(mondrianConfiguration);
 	}
 
@@ -89,12 +93,12 @@ public class MondrianApp extends AbstractCyAction implements MondrianConfigurati
 		// TODO Auto-generated method stub
 		
 	}
-
-	public MapControlPanel getControlPane() {
+	
+	public HeatMapPanel getControlPane() {
 		return controlPane;
 	}
 
-	public void setControlPane(MapControlPanel controlPane) {
+	public void setControlPane(HeatMapPanel controlPane) {
 		this.controlPane = controlPane;
 	}
 
@@ -160,5 +164,17 @@ public class MondrianApp extends AbstractCyAction implements MondrianConfigurati
 
 	public void setNetworkTableMangager(CyNetworkTableManager networkTableMangager) {
 		this.networkTableMangager = networkTableMangager;
+	}
+	
+	public void addConfigurationListener(MondrianConfigurationListener listener) {
+		this.mondrianConfiguration.addConfigurationListener(listener);
+	}
+
+	public CyNetworkManager getNetworkManager() {
+		return networkManager;
+	}
+
+	public void setNetworkManager(CyNetworkManager networkManager) {
+		this.networkManager = networkManager;
 	}
 }

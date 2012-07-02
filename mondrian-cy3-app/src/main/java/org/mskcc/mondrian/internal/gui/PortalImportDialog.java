@@ -10,6 +10,7 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.MouseEvent;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
@@ -45,6 +46,7 @@ import org.mskcc.mondrian.client.DataTypeMatrix;
 import org.mskcc.mondrian.client.GeneticProfile;
 import org.mskcc.mondrian.client.GeneticProfile.GENETIC_PROFILE_TYPE;
 import org.mskcc.mondrian.internal.MondrianApp;
+import org.mskcc.mondrian.internal.configuration.ConfigurationChangedEvent.Type;
 import org.slf4j.Logger;
 
 public class PortalImportDialog extends JDialog {
@@ -302,20 +304,22 @@ public class PortalImportDialog extends JDialog {
 			CaseList caseList = (CaseList)caseSetComboBox.getSelectedItem();
 			Object[] profiles = profileList.getSelectedValues();
 			String geneSymbolField = (String)geneSymbolComboBox.getSelectedItem();
-			CyTable defaultTable = MondrianApp.getInstance().getAppManager().getCurrentNetwork().getDefaultNodeTable();
-			List<CyRow> rows = defaultTable.getAllRows();
-			Map<String, Long> geneSymbolMap = new HashMap<String, Long>(); 
-			for (CyRow cyRow : rows) {
-				String geneSymbol = cyRow.get(geneSymbolField, String.class);
-				Long suid = cyRow.get(CyIdentifiable.SUID, Long.class);
-				geneSymbolMap.put(geneSymbol, suid);
-			}
+			// update the configuration to store this field
+			MondrianApp app = MondrianApp.getInstance();
+			CyNetwork currentNetwork = app.getAppManager().getCurrentNetwork();
+			
+			// call the next two lines in the right order!
+			app.getMondrianConfiguration().setNetworkGeneSymbolAttr(currentNetwork.getSUID(), geneSymbolField);
+			Map<String, Long> geneSymbolMap = app.getMondrianConfiguration().getGeneNodeMap(currentNetwork.getSUID());
+			
 			List<String> genes = new ArrayList<String>(geneSymbolMap.keySet());
 			
 			// Extract data from web service
 			int p = 1; 
+			List<GeneticProfile> profileList = new ArrayList<GeneticProfile>();
 			for (Object obj: profiles) {
 				GeneticProfile profile = (GeneticProfile)obj;
+				profileList.add(profile);
 				taskMonitor.setStatusMessage("Loading genetic profile: " + profile.getName());
 				taskMonitor.setProgress(p++/(double)profiles.length);
 
@@ -340,7 +344,7 @@ public class PortalImportDialog extends JDialog {
 				for (String rowName: matrix.getRowNames()) {
 					long suid = geneSymbolMap.get(rowName); 
 					CyRow row = table.getRow(suid);
-					row.set("selected", defaultTable.getRow(suid).get("selected", Boolean.class));
+					row.set("selected", currentNetwork.getDefaultNodeTable().getRow(suid).get("selected", Boolean.class));
 					row.set(geneSymbolField, rowName);
 					int i = 0; 
 					for (String colName: dataColNames) {
@@ -349,11 +353,12 @@ public class PortalImportDialog extends JDialog {
 				}
 				log.debug("Loading genetic profile: " + profile.getName() + "; Insert Table: " + matrix.getNumRows() + ", " + matrix.getDataColNames().size());
 				
-				MondrianApp app = MondrianApp.getInstance();
 				app.getTableManager().addTable(table);
 				CyNetwork network = app.getAppManager().getCurrentNetwork();
 				app.getNetworkTableMangager().setTable(network, CyNode.class, profile.getId(), table);
 			}
+
+			app.getMondrianConfiguration().cbioDataImport(currentNetwork.getSUID(), profileList, caseList);
 		}
 	}
 }
