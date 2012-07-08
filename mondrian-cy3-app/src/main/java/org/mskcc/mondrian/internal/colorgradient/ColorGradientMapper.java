@@ -28,7 +28,10 @@
  **/
 package org.mskcc.mondrian.internal.colorgradient;
 
+import java.awt.Color;
+
 import org.mskcc.mondrian.internal.configuration.ConfigurationChangedEvent;
+import org.mskcc.mondrian.internal.configuration.MondrianConfiguration;
 import org.mskcc.mondrian.internal.configuration.MondrianConfigurationListener;
 
 //import cytoscape.Cytoscape;
@@ -101,17 +104,17 @@ public class ColorGradientMapper implements MondrianConfigurationListener {
 //        }
 //    }
 //
-//	/**
-//	 * Gets color gradient (as hex string) for given gene/sample/data type.
-//	 *
-//     * @param mondrianConfiguration MondrianConfiguration
-//	 * @param gene String
-//	 * @param measurement Double
-//	 * @param matrix DataTypeMatrix
-//	 * @return Color
-//	 */
-//	public static Color getColorGradient(MondrianConfiguration mondrianConfiguration, String gene, Double measurement, DataTypeMatrix matrix) {
-//
+	/**
+	 * Gets color gradient (as hex string) for given gene/sample/data type.
+	 *
+     * @param mondrianConfiguration MondrianConfiguration
+	 * @param gene String
+	 * @param measurement Double
+	 * @param matrix DataTypeMatrix
+	 * @return Color
+	 */
+	public static Color getColorGradient(MondrianConfiguration mondrianConfiguration, String gene, Double measurement) {
+
 //		// sparse matrix files will contain NaN value when no data is available
 //		if (measurement.equals(Double.NaN)) return mondrianConfiguration.getColorTheme().getNoDataColor();
 //
@@ -127,7 +130,8 @@ public class ColorGradientMapper implements MondrianConfigurationListener {
 //																			   continuousMapping.getInterpolator(),
 //																			   attrBundle);
 //		return (Color)calculator.calculateRangeValue(gene);
-//	}
+		return Color.green;
+	}
 //
 //	/**
 //	 * Gets color gradient (as hex string) for given gene/sample/data type.

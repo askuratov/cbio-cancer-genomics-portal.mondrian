@@ -64,14 +64,18 @@ public class GeneticProfile {
     }
 
     public static enum GENETIC_PROFILE_TYPE {
-        NOT_KNOWN,
-        COPY_NUMBER_ALTERATION,
-        MRNA_EXPRESSION,
-        METHYLATION,
-        METHYLATION_BINARY,
-        MUTATION_EXTENDED,
-        PROTEIN_ARRAY_PROTEIN_LEVEL,
-        PROTEIN_ARRAY_PHOSPHORYLATION;
+        NOT_KNOWN("NOT_KNOWN"),
+        COPY_NUMBER_ALTERATION("COPY_NUMBER_ALTERATION"),
+        MRNA_EXPRESSION("MRNA_EXPRESSION"),
+        METHYLATION("METHYLATION"),
+        METHYLATION_BINARY("METHYLATION_BINARY"),
+        MUTATION_EXTENDED("MUTATION_EXTENDED"),
+        PROTEIN_ARRAY_PROTEIN_LEVEL("PROTEIN_ARRAY_PROTEIN_LEVEL"),
+        PROTEIN_ARRAY_PHOSPHORYLATION("PROTEIN_ARRAY_PHOSPHORYLATION");
+        
+        private String name;
+        GENETIC_PROFILE_TYPE(String name) { this.name = name; }
+        public String toString() { return name; }
     }
     
     public String toString() {

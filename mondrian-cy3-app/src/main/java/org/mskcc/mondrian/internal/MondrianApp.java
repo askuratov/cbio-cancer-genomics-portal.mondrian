@@ -1,6 +1,8 @@
 package org.mskcc.mondrian.internal;
 
 import java.awt.event.ActionEvent;
+import java.util.Collection;
+import java.util.List;
 
 import org.cytoscape.application.CyApplicationManager;
 import org.cytoscape.application.swing.AbstractCyAction;
@@ -8,10 +10,14 @@ import org.cytoscape.application.swing.CySwingApplication;
 import org.cytoscape.application.swing.CytoPanel;
 import org.cytoscape.application.swing.CytoPanelName;
 import org.cytoscape.application.swing.CytoPanelState;
+import org.cytoscape.model.CyColumn;
+import org.cytoscape.model.CyNetwork;
 import org.cytoscape.model.CyNetworkManager;
 import org.cytoscape.model.CyNetworkTableManager;
+import org.cytoscape.model.CyTable;
 import org.cytoscape.model.CyTableFactory;
 import org.cytoscape.model.CyTableManager;
+import org.cytoscape.model.SUIDFactory;
 import org.cytoscape.work.swing.DialogTaskManager;
 import org.mskcc.mondrian.internal.configuration.ConfigurationChangedEvent;
 import org.mskcc.mondrian.internal.configuration.MondrianConfiguration;
@@ -19,7 +25,7 @@ import org.mskcc.mondrian.internal.configuration.MondrianConfiguration;
 import org.mskcc.mondrian.internal.configuration.MondrianConfigurationListener;
 import org.mskcc.mondrian.internal.gui.DataTypesPanel;
 import org.mskcc.mondrian.internal.gui.MapControlPanel;
-import org.mskcc.mondrian.internal.gui.heatmap.HeatMapPanel;
+import org.mskcc.mondrian.internal.gui.heatmap.HeatmapPanel;
 
 /**
  * The Mondrian App
@@ -36,7 +42,7 @@ public class MondrianApp extends AbstractCyAction implements MondrianConfigurati
 	private CyTableManager tableManager;
 	private CyNetworkTableManager networkTableMangager;
 	private MondrianConfiguration mondrianConfiguration;
-	private HeatMapPanel controlPane;
+	private HeatmapPanel heatmapPane;
 	private DataTypesPanel dataTypesPane;
 	
 	
@@ -69,8 +75,20 @@ public class MondrianApp extends AbstractCyAction implements MondrianConfigurati
 		
 		mondrianConfiguration = new MondrianConfiguration();
 
-		this.controlPane = new HeatMapPanel();
-		this.dataTypesPane = DataTypesPanel.getInstance(mondrianConfiguration);
+		this.heatmapPane = new HeatmapPanel();
+		this.dataTypesPane = new DataTypesPanel();
+		
+		mondrianConfiguration.addConfigurationListener(heatmapPane);
+		
+
+		/*
+		CyNetwork network = appManager.getCurrentNetwork();
+		CyTable table = network.getDefaultNetworkTable();
+		Collection<CyColumn> cols = table.getColumns();
+		for (CyColumn cyColumn : cols) {
+			System.out.println(cyColumn.getName());
+		}
+		*/
 	}
 
 	public void actionPerformed(ActionEvent e) {
@@ -94,12 +112,12 @@ public class MondrianApp extends AbstractCyAction implements MondrianConfigurati
 		
 	}
 	
-	public HeatMapPanel getControlPane() {
-		return controlPane;
+	public HeatmapPanel getControlPane() {
+		return heatmapPane;
 	}
 
-	public void setControlPane(HeatMapPanel controlPane) {
-		this.controlPane = controlPane;
+	public void setControlPane(HeatmapPanel controlPane) {
+		this.heatmapPane = controlPane;
 	}
 
 	public DataTypesPanel getDataTypesPane() {
@@ -177,4 +195,14 @@ public class MondrianApp extends AbstractCyAction implements MondrianConfigurati
 	public void setNetworkManager(CyNetworkManager networkManager) {
 		this.networkManager = networkManager;
 	}
+
+	public HeatmapPanel getHeatmapPane() {
+		return heatmapPane;
+	}
+
+	public void setHeatmapPane(HeatmapPanel heatmapPane) {
+		this.heatmapPane = heatmapPane;
+	}
+	
+	
 }

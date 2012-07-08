@@ -353,12 +353,12 @@ public class PortalImportDialog extends JDialog {
 				}
 				log.debug("Loading genetic profile: " + profile.getName() + "; Insert Table: " + matrix.getNumRows() + ", " + matrix.getDataColNames().size());
 				
-				app.getTableManager().addTable(table);
 				CyNetwork network = app.getAppManager().getCurrentNetwork();
-				app.getNetworkTableMangager().setTable(network, CyNode.class, profile.getId(), table);
+				CancerStudy study = (CancerStudy)cancerStudyComboBox.getSelectedItem();
+				app.getMondrianConfiguration().registerMondrianTable(network, table, study, profile, caseList);
 			}
 
-			app.getMondrianConfiguration().cbioDataImport(currentNetwork.getSUID(), profileList, caseList);
+			//app.getMondrianConfiguration().cbioDataImport(currentNetwork.getSUID(), profileList, caseList);
 		}
 	}
 }

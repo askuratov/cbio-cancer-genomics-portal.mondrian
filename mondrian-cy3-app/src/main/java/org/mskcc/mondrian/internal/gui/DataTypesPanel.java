@@ -7,11 +7,14 @@ import java.net.URL;
 import javax.swing.Icon;
 import javax.swing.ImageIcon;
 import javax.swing.JEditorPane;
+import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 
 import org.cytoscape.application.swing.CytoPanelComponent;
 import org.cytoscape.application.swing.CytoPanelName;
+import org.cytoscape.model.CyNetwork;
 import org.mskcc.mondrian.internal.MondrianApp;
+import org.mskcc.mondrian.internal.MondrianUtil;
 import org.mskcc.mondrian.internal.configuration.MondrianConfiguration;
 import javax.swing.border.TitledBorder;
 import javax.swing.JTabbedPane;
@@ -29,14 +32,7 @@ public class DataTypesPanel extends JPanel implements CytoPanelComponent {
 	private static final long serialVersionUID = -7362884992020398542L;
 	protected static DataTypesPanel instance;
 	
-	public static DataTypesPanel getInstance(MondrianConfiguration mondrianConfiguration) {
-		if (instance == null) {
-			instance = new DataTypesPanel(mondrianConfiguration);
-		}
-		return instance;
-	}
-	
-	private DataTypesPanel(MondrianConfiguration mondrianConfiguration) {
+	public DataTypesPanel() {
 		
 		// add a dummy panel
 		JEditorPane pane = new JEditorPane();
@@ -54,6 +50,12 @@ public class DataTypesPanel extends JPanel implements CytoPanelComponent {
 		JButton btnLoad = new JButton("Load");
 		btnLoad.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent arg0) {
+				CyNetwork network = MondrianUtil.getCurrentNetwork();
+				if (network == null) {
+					JOptionPane.showMessageDialog(MondrianApp.getInstance().getDataTypesPane(),
+							"No network found. Please open a network first before importing cBio data!");
+					return;
+				}
 				PortalImportDialog dialog = PortalImportDialog.getInstance();
 				dialog.setLocationRelativeTo(MondrianApp.getInstance().getDesktopApp().getJFrame());
 				dialog.setModal(true);

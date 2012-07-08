@@ -22,7 +22,7 @@ public class ConfigurationChangedEvent extends java.util.EventObject {
 	
 	private Type type;
 	
-	public ConfigurationChangedEvent(MondrianConfiguration source, Type type) {
+	public ConfigurationChangedEvent(Object source, Type type) {
 		super(source);
 		this.type = type;
 	}
