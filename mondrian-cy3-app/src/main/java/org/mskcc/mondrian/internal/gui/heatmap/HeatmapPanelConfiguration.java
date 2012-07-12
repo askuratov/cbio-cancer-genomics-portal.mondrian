@@ -2,6 +2,8 @@ package org.mskcc.mondrian.internal.gui.heatmap;
 
 import java.util.List;
 
+import org.mskcc.mondrian.client.CancerStudy;
+
 public class HeatmapPanelConfiguration {
 	/**
 	 * Constant Element Enumeration
@@ -50,8 +52,8 @@ public class HeatmapPanelConfiguration {
 
 	// the ref of the heatmap panel this configuration applies too
 	private HeatmapPanel heatmapPanel;
-
-	// the new "constant value"
+	
+	private CancerStudy cancerStudy;
 	private PROPERTY_TYPE constantPropertyType;
 	private String constantProperty;
 
@@ -239,6 +241,14 @@ public class HeatmapPanelConfiguration {
 	public void setColumnPropertyType(PROPERTY_TYPE columnPropertyType) {
 		this.columnPropertyType = columnPropertyType;
 	}
+	
+	public CancerStudy getCancerStudy() {
+		return cancerStudy;
+	}
+
+	public void setCancerStudy(CancerStudy cancerStudy) {
+		this.cancerStudy = cancerStudy;
+	}	
 
 	/**
 	 * Gets the column properties.

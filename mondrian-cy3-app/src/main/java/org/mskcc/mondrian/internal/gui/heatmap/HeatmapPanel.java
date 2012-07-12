@@ -36,7 +36,7 @@ import org.cytoscape.work.AbstractTask;
 import org.cytoscape.work.TaskIterator;
 import org.cytoscape.work.TaskMonitor;
 import org.cytoscape.work.swing.DialogTaskManager;
-import org.mskcc.mondrian.client.CancerStudy;
+import org.mskcc.mondrian.client.CaseList;
 import org.mskcc.mondrian.client.GeneticProfile;
 import org.mskcc.mondrian.internal.MondrianApp;
 import org.mskcc.mondrian.internal.configuration.ConfigurationChangedEvent;
@@ -55,7 +55,7 @@ TableAddedListener, TableDeletedListener, RowsSetListener, CytoPanelComponent, A
 	private JComboBox constantPropertyComboBox;
 	private JCheckBox hideGenesCheckBox;
 	private HeatmapTable heatmapTable;
-	private JComboBox cancerStudyComboBox;
+	private HeatmapPanelConfiguration configuration;
 
 	/**
 	 * Create the panel.
@@ -85,9 +85,6 @@ TableAddedListener, TableDeletedListener, RowsSetListener, CytoPanelComponent, A
 				taskManager.execute(new TaskIterator(new UpdateConstantTypeTask()));					
 			}
 		});;
-		
-		cancerStudyComboBox = new JComboBox();
-		headerPane.add(cancerStudyComboBox);
 		constantPropertyTypeComboBox.setAlignmentX(Component.LEFT_ALIGNMENT);
 		constantPropertyTypeComboBox.setModel(new DefaultComboBoxModel(org.mskcc.mondrian.internal.gui.heatmap.HeatmapPanelConfiguration.PROPERTY_TYPE.values()));
 		headerPane.add(constantPropertyTypeComboBox);
@@ -153,51 +150,44 @@ TableAddedListener, TableDeletedListener, RowsSetListener, CytoPanelComponent, A
 		
 		JButton rowEndButton = new JButton("Last Row");
 		rowPane.add(rowEndButton);
-
-		//MondrianApp.getInstance().addConfigurationListener(this);
 		//updatePanelData();
 	}
 	
-	public void updatePanelData(MondrianCyTable table) {
+	public void updatePanelData(List<MondrianCyTable> tables) {
 		//updateConstantPropertyComboBox();
 		// update data for 
 		MondrianConfiguration mondrianConfig = MondrianApp.getInstance().getMondrianConfiguration();
 		CyNetwork network = MondrianApp.getInstance().getAppManager().getCurrentNetwork();
 		System.out.println(mondrianConfig.getCancerStudies(network).size());
-		cancerStudyComboBox.setModel(new DefaultComboBoxModel(mondrianConfig.getCancerStudies(network).toArray()));
-		cancerStudyComboBox.setSelectedItem(table.getStudy());
+		
+		if (tables.size() == 0) {
+			clearPanel();
+		}
 		
 		// update constant property combobox
 		if (constantPropertyTypeComboBox.getSelectedItem() == PROPERTY_TYPE.DATA_TYPE) {
-			
+			List<GeneticProfile> profiles = new ArrayList<GeneticProfile>();
+			for (MondrianCyTable table: tables) {
+				profiles.add(table.getProfile());
+			}
+			constantPropertyComboBox.setModel(new DefaultComboBoxModel(profiles.toArray()));
+		} else if (constantPropertyTypeComboBox.getSelectedItem() == PROPERTY_TYPE.SAMPLE) {
+			CaseList caseList = tables.get(0).getCaseList();
+			constantPropertyComboBox.setModel(new DefaultComboBoxModel(caseList.getCases()));
 		}
-	
+		constantPropertyComboBox.setSelectedIndex(0);
+		updateHeatmapTable();
 		this.validate();
 	}
-	
-	public void loadStudyData(CancerStudy study) {
-		
+
+	private void updateHeatmapTable() {
+		DialogTaskManager taskManager = MondrianApp.getInstance().getTaskManager();
+		taskManager.execute(new TaskIterator(new UpdateHeatmapTableTask()));		
 	}
 
-	public void udateConstantPropertyComboBox(CancerStudy study) {
-		MondrianApp app = MondrianApp.getInstance();
-		MondrianConfiguration config = app.getMondrianConfiguration();
-		List<String> list = new ArrayList<String>();
-		CyNetwork network = app.getAppManager().getCurrentNetwork();
-		PROPERTY_TYPE cannedConfig = (PROPERTY_TYPE)this.constantPropertyTypeComboBox.getSelectedItem();
-		switch(cannedConfig) {
-		case GENE:
-			Map<String, Long> geneNodeMap = config.getGeneNodeMap(network.getSUID());
-			list = new ArrayList<String>(geneNodeMap.keySet());
-			Collections.sort(list);
-			break;
-		case DATA_TYPE:
-			List<GeneticProfile> profiles = config.getGeneticProfiles(network, study);
-			break;
-		case SAMPLE:
-			break;
-		}
-		constantPropertyComboBox.setModel(new DefaultComboBoxModel(list.toArray()));	
+	private void clearPanel() {
+		// TODO Auto-generated method stub
+		
 	}
 
 	@Override
@@ -214,7 +204,7 @@ TableAddedListener, TableDeletedListener, RowsSetListener, CytoPanelComponent, A
 	@Override
 	public void configurationChanged(ConfigurationChangedEvent evt) {
 		if (evt.getType() == Type.CBIO_DATA_IMPORTED) {
-			this.updatePanelData((MondrianCyTable)evt.getSource());
+			this.updatePanelData((List<MondrianCyTable>)evt.getSource());
 		}
 	}
 
@@ -240,7 +230,7 @@ TableAddedListener, TableDeletedListener, RowsSetListener, CytoPanelComponent, A
 		return new ImageIcon(url);
 	}
 
-	@Override
+	@Override		
 	public String getTitle() {
 		return "Mondrian Control Panel";
 	}
@@ -271,6 +261,14 @@ TableAddedListener, TableDeletedListener, RowsSetListener, CytoPanelComponent, A
 		taskManager.execute(new TaskIterator(new UpdateConstantTypeTask()));			
 	}
 	
+	public HeatmapPanelConfiguration getConfiguration() {
+		return configuration;
+	}
+
+	public void setConfiguration(HeatmapPanelConfiguration configuration) {
+		this.configuration = configuration;
+	}
+
 	class UpdateConstantTypeTask extends AbstractTask {
 
 		@Override
@@ -279,7 +277,6 @@ TableAddedListener, TableDeletedListener, RowsSetListener, CytoPanelComponent, A
 			MondrianConfiguration config = app.getMondrianConfiguration();
 			CyNetwork network = app.getAppManager().getCurrentNetwork();
 			PROPERTY_TYPE cannedConfig = (PROPERTY_TYPE)constantPropertyTypeComboBox.getSelectedItem();
-			CancerStudy study = (CancerStudy)cancerStudyComboBox.getSelectedItem();
 			switch(cannedConfig) {
 			case GENE:
 				Map<String, Long> geneNodeMap = config.getGeneNodeMap(network.getSUID());
@@ -288,8 +285,8 @@ TableAddedListener, TableDeletedListener, RowsSetListener, CytoPanelComponent, A
 				constantPropertyComboBox.setModel(new DefaultComboBoxModel(list.toArray()));				
 				break;
 			case DATA_TYPE:
-				List<GeneticProfile> profiles = config.getGeneticProfiles(network, study);
-				constantPropertyComboBox.setModel(new DefaultComboBoxModel(profiles.toArray()));
+				//List<GeneticProfile> profiles = config.getGeneticProfiles(network, study);
+				//constantPropertyComboBox.setModel(new DefaultComboBoxModel(profiles.toArray()));
 				break;
 			case SAMPLE:
 				//CaseList caseList = config.getNetworkCaseList(network.getSUID());
@@ -299,4 +296,27 @@ TableAddedListener, TableDeletedListener, RowsSetListener, CytoPanelComponent, A
 		}
 		
 	}
+	
+	class UpdateHeatmapTableTask extends AbstractTask {
+		@Override
+		public void run(TaskMonitor arg0) throws Exception {
+			PROPERTY_TYPE propertyType = (PROPERTY_TYPE)constantPropertyTypeComboBox.getSelectedItem();
+			MondrianConfiguration config = MondrianApp.getInstance().getMondrianConfiguration();
+			CyNetwork network = MondrianApp.getInstance().getAppManager().getCurrentNetwork();
+			switch(propertyType) {
+			case GENE:
+				break;
+			case DATA_TYPE:
+				GeneticProfile profile = (GeneticProfile)constantPropertyComboBox.getSelectedItem();
+				CyTable table = config.getCurrentTableByProfile(network, profile);
+				heatmapTable.updateCyTable(table);
+				break;
+			case SAMPLE: 
+				break;
+			}
+		}
+		
+	}
+	
+	
 }

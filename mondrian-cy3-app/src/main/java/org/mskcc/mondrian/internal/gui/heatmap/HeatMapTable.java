@@ -8,6 +8,7 @@ import java.awt.Shape;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.Vector;
@@ -20,9 +21,14 @@ import javax.swing.JViewport;
 import javax.swing.border.Border;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
+import javax.swing.table.AbstractTableModel;
 import javax.swing.table.TableColumn;
 import javax.swing.table.TableColumnModel;
+import javax.swing.table.TableModel;
 
+import org.cytoscape.model.CyColumn;
+import org.cytoscape.model.CyRow;
+import org.cytoscape.model.CyTable;
 import org.mskcc.mondrian.internal.MondrianApp;
 import org.mskcc.mondrian.internal.colorgradient.ColorGradientMapper;
 import org.mskcc.mondrian.internal.configuration.MondrianConfiguration;
@@ -303,7 +309,7 @@ public class HeatmapTable implements ChangeListener, PropertyChangeListener {
 			// outta here
 			return this;
 		}
-
+		
 		/**
 		 * Method called when exporting image (like to a pdf).
 		 *
@@ -691,6 +697,45 @@ public class HeatmapTable implements ChangeListener, PropertyChangeListener {
 
 			// outta here
 			return toReturn;
+		}
+	}	
+	
+	public void updateCyTable(CyTable table) {
+		TableModel model = new HeatmapTableModel(table);
+		main.setModel(model);
+		main.getTableHeader().resizeAndRepaint();
+		main.revalidate();		
+	}
+	
+	@SuppressWarnings("serial")
+	class HeatmapTableModel extends AbstractTableModel {
+		private CyTable cyTable;
+		
+		public HeatmapTableModel(CyTable cyTable) {
+			super();
+			this.cyTable = cyTable;
+		}
+		@Override
+		public int getRowCount() {
+			return cyTable.getRowCount();
+		}
+
+		@Override
+		public int getColumnCount() {
+			return cyTable.getColumns().size();
+		}
+
+		@Override
+		public Object getValueAt(int rowIndex, int columnIndex) {
+			CyRow row = cyTable.getAllRows().get(rowIndex);
+			CyColumn col = new ArrayList<CyColumn>(cyTable.getColumns()).get(columnIndex);
+			return row.getRaw(col.getName());
+		}
+		
+		@Override
+		public String getColumnName(int column) {
+			List<CyColumn> cols = new ArrayList<CyColumn>(cyTable.getColumns());
+			return cols.get(column).getName();
 		}
 	}	
 }

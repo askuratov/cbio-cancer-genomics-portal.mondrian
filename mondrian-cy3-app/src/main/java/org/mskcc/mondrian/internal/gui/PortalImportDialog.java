@@ -47,6 +47,7 @@ import org.mskcc.mondrian.client.GeneticProfile;
 import org.mskcc.mondrian.client.GeneticProfile.GENETIC_PROFILE_TYPE;
 import org.mskcc.mondrian.internal.MondrianApp;
 import org.mskcc.mondrian.internal.configuration.ConfigurationChangedEvent.Type;
+import org.mskcc.mondrian.internal.configuration.MondrianCyTable;
 import org.slf4j.Logger;
 
 public class PortalImportDialog extends JDialog {
@@ -317,6 +318,9 @@ public class PortalImportDialog extends JDialog {
 			// Extract data from web service
 			int p = 1; 
 			List<GeneticProfile> profileList = new ArrayList<GeneticProfile>();
+			List<MondrianCyTable> importedTables = new ArrayList<MondrianCyTable>();
+			CyNetwork network = app.getAppManager().getCurrentNetwork();
+			CancerStudy study = (CancerStudy)cancerStudyComboBox.getSelectedItem();
 			for (Object obj: profiles) {
 				GeneticProfile profile = (GeneticProfile)obj;
 				profileList.add(profile);
@@ -328,8 +332,8 @@ public class PortalImportDialog extends JDialog {
 				DataTypeMatrix matrix = portalClient.getProfileData(caseList, profile, genes);
 
 				// Create a few default columns
-				table.createColumn("selected", Boolean.class, true);
-				table.createColumn(geneSymbolField, String.class, false);
+				//table.createColumn("selected", Boolean.class, true);
+				//table.createColumn(geneSymbolField, String.class, false);
 				
 				List<String> dataColNames = matrix.getDataColNames();
 				for (String colName: dataColNames) {
@@ -344,8 +348,8 @@ public class PortalImportDialog extends JDialog {
 				for (String rowName: matrix.getRowNames()) {
 					long suid = geneSymbolMap.get(rowName); 
 					CyRow row = table.getRow(suid);
-					row.set("selected", currentNetwork.getDefaultNodeTable().getRow(suid).get("selected", Boolean.class));
-					row.set(geneSymbolField, rowName);
+					//row.set("selected", currentNetwork.getDefaultNodeTable().getRow(suid).get("selected", Boolean.class));
+					//row.set(geneSymbolField, rowName);
 					int i = 0; 
 					for (String colName: dataColNames) {
 						row.set(colName, matrix.getDataRow(rowName).get(i++));
@@ -353,11 +357,11 @@ public class PortalImportDialog extends JDialog {
 				}
 				log.debug("Loading genetic profile: " + profile.getName() + "; Insert Table: " + matrix.getNumRows() + ", " + matrix.getDataColNames().size());
 				
-				CyNetwork network = app.getAppManager().getCurrentNetwork();
-				CancerStudy study = (CancerStudy)cancerStudyComboBox.getSelectedItem();
-				app.getMondrianConfiguration().registerMondrianTable(network, table, study, profile, caseList);
+				MondrianCyTable mondrianCyTable = new MondrianCyTable(study, profile, caseList, table);
+				importedTables.add(mondrianCyTable);
+				//
 			}
-
+			app.getMondrianConfiguration().registerMondrianTables(network, importedTables);
 			//app.getMondrianConfiguration().cbioDataImport(currentNetwork.getSUID(), profileList, caseList);
 		}
 	}

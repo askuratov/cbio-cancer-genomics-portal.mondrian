@@ -16,11 +16,12 @@ import org.cytoscape.model.CyNetworkTableManager;
 import org.cytoscape.model.CyNode;
 import org.cytoscape.model.CyRow;
 import org.cytoscape.model.CyTable;
+import org.cytoscape.model.CyTableManager;
+import org.cytoscape.model.CyTable.SavePolicy;
 import org.mskcc.mondrian.client.CancerStudy;
 import org.mskcc.mondrian.client.CaseList;
 import org.mskcc.mondrian.client.DataTypeMatrix;
 import org.mskcc.mondrian.client.GeneticProfile;
-import org.mskcc.mondrian.client.GeneticProfile.GENETIC_PROFILE_TYPE;
 import org.mskcc.mondrian.internal.MondrianApp;
 import org.mskcc.mondrian.internal.colorgradient.ColorGradientRange;
 import org.mskcc.mondrian.internal.colorgradient.ColorGradientTheme;
@@ -206,49 +207,65 @@ public class MondrianConfiguration {
 	 * @param network
 	 * @param table
 	 */
-	public void registerMondrianTable(CyNetwork network, CyTable table, CancerStudy study, 
-			GeneticProfile profile, CaseList caseList) {
+	public void registerMondrianTables(CyNetwork network, Collection<MondrianCyTable> mondrianTables) {
 		MondrianApp app = MondrianApp.getInstance();
 		CyNetworkTableManager networkTableManager = app.getNetworkTableMangager();
 		
-		// Attach table to netework
-		app.getTableManager().addTable(table);
-		app.getNetworkTableMangager().setTable(network, CyNode.class, getTableNamespase(study, profile, caseList), table);
+		System.out.println("Number of tables: " + networkTableManager.getTables(network, CyNode.class).size());
+		System.out.println("Number of metatables: " + networkTableManager.getTables(network, CyTable.class).size());
 		
 		// Add imported table and study, profile, caseList to the mondrian meta table
-		CyTable metaTable = networkTableManager.getTable(network, CyTable.class, "mondrian_meta_table"); 
+		CyTable metaTable = getMondrianMetaTable(network);
+		
 		// creates a table to store mondrian table metadata
 		if (metaTable == null) {
-			metaTable = app.getTableFactory().createTable("Mondrian Table", "Table", Long.class, true, false);
+			metaTable = app.getTableFactory().createTable("Mondrian Table", CyIdentifiable.SUID, Long.class, false, false);
+			metaTable.setSavePolicy(SavePolicy.SESSION_FILE);
 			metaTable.createColumn("study_id", String.class, false);
 			metaTable.createColumn("study_name", String.class, false);
 			metaTable.createColumn("study_description", String.class, false);
-			metaTable.createColumn("genetic_profile_id", String.class, true);
-			metaTable.createColumn("genetic_profile_name", String.class, true);
-			metaTable.createColumn("genetic_profile_type", String.class, true);
-			metaTable.createColumn("case_list_id", String.class, true);
-			metaTable.createColumn("case_list_name", String.class, true);
-			metaTable.createColumn("case_list_description", String.class, true);
-			metaTable.createListColumn("case_list_cases", String.class, true);
-			networkTableManager.setTable(network, CyTable.class, "mondrian_meta_table", metaTable);
+			metaTable.createColumn("genetic_profile_id", String.class, false);
+			metaTable.createColumn("genetic_profile_name", String.class, false);
+			metaTable.createColumn("genetic_profile_type", String.class, false);
+			metaTable.createColumn("case_list_id", String.class, false);
+			metaTable.createColumn("case_list_name", String.class, false);
+			metaTable.createColumn("case_list_description", String.class, false);
+			metaTable.createListColumn("case_list_cases", String.class, false);
+			metaTable.createColumn("current", Boolean.class, false);
 			app.getTableManager().addTable(metaTable);
+			setMondrianMetaTable(network, metaTable);
+		} else { // set all rows not current
+			System.out.println("number of rows in metaTable: " + metaTable.getAllRows().size());
+			List<CyRow> rows = metaTable.getAllRows();
+			for (CyRow row: rows) {
+				row.set("current", false);
+			}
 		}
-
-		// register the table to the mondrian_meta_table
-		CyRow row = metaTable.getRow(table.getSUID());
-		row.set("study_id", study.getStudyId());
-		row.set("study_name", study.getName());
-		row.set("study_description", study.getDescription());
-		row.set("genetic_profile_id", profile.getId());
-		row.set("genetic_profile_name", profile.getName());
-		row.set("genetic_profile_type", profile.getType().toString());
-		row.set("case_list_id", caseList.getId());
-		row.set("case_list_name", caseList.getName());
-		row.set("case_list_description", caseList.getDescription());
-		row.set("case_list_cases", Arrays.asList(caseList.getCases()));
 		
-		MondrianCyTable mondrianTable = new MondrianCyTable(study, profile, caseList, table);
-		ConfigurationChangedEvent evt = new ConfigurationChangedEvent(mondrianTable, Type.CBIO_DATA_IMPORTED);
+		for (MondrianCyTable mondrianTable: mondrianTables) {
+			CyTable table = mondrianTable.getTable();
+			CancerStudy study = mondrianTable.getStudy();
+			GeneticProfile profile = mondrianTable.getProfile();
+			CaseList caseList = mondrianTable.getCaseList();
+			// Attach table to netework
+			app.getTableManager().addTable(table);
+			app.getNetworkTableMangager().setTable(network, CyNode.class, getTableNamespase(study, profile, caseList), table);
+	
+			// register the table to the mondrian_meta_table
+			CyRow row = metaTable.getRow(table.getSUID());
+			row.set("study_id", study.getStudyId());
+			row.set("study_name", study.getName());
+			row.set("study_description", study.getDescription());
+			row.set("genetic_profile_id", profile.getId());
+			row.set("genetic_profile_name", profile.getName());
+			row.set("genetic_profile_type", profile.getType().toString());
+			row.set("case_list_id", caseList.getId());
+			row.set("case_list_name", caseList.getName());
+			row.set("case_list_description", caseList.getDescription());
+			row.set("case_list_cases", Arrays.asList(caseList.getCases()));
+			row.set("current", true);
+		}
+		ConfigurationChangedEvent evt = new ConfigurationChangedEvent(mondrianTables, Type.CBIO_DATA_IMPORTED);
 		notifyConfigurationChanged(evt);
 	}
 	
@@ -259,8 +276,22 @@ public class MondrianConfiguration {
 	 * @return
 	 */
 	public static CyTable getMondrianMetaTable(CyNetwork network) {
-		CyNetworkTableManager networkTableManager = MondrianApp.getInstance().getNetworkTableMangager();
-		return networkTableManager.getTable(network, CyTable.class, "mondrian_meta_table");
+		CyTable table = network.getDefaultNetworkTable();
+		CyRow row = table.getRow(network.getSUID());
+		if (table.getColumn("mondrian_table") == null) return null;
+		return MondrianApp.getInstance().getTableManager().getTable(row.get("mondrian_table", Long.class));
+	}
+	
+	/**
+	 * Sets the mondrian meta table for a network. 
+	 * @param network
+	 * @param mondrianMetaTable
+	 */
+	public static void setMondrianMetaTable(CyNetwork network, CyTable mondrianMetaTable) {
+		CyTable table = network.getDefaultNetworkTable();
+		CyRow row = table.getRow(network.getSUID());
+		if (table.getColumn("mondrian_table") == null) table.createColumn("mondrian_table", Long.class, false);
+		row.set("mondrian_table", mondrianMetaTable.getSUID());
 	}
 	
 	/**
@@ -349,12 +380,20 @@ public class MondrianConfiguration {
 	}
 	
 	/**
-	 * Returns the CyTable with the genetic profile
+	 * Returns the current CyTable with the genetic profile
 	 * @param network
 	 * @param profileId
 	 * @return
 	 */
-	public List<CyTable> getTableByProfile(CyNetwork network, String profileId) {
+	public CyTable getCurrentTableByProfile(CyNetwork network, GeneticProfile profile) {
+		CyTable metaTable = getMondrianMetaTable(network);
+		Collection<CyRow> rows = metaTable.getMatchingRows("current", true);
+		for (CyRow cyRow : rows) {
+			if (cyRow.get("genetic_profile_id", String.class).equals(profile.getId())) {
+				CyTableManager manager = MondrianApp.getInstance().getTableManager();
+				return manager.getTable(cyRow.get(CyIdentifiable.SUID, Long.class));
+			}
+		}
 		return null;
 	}
 	
