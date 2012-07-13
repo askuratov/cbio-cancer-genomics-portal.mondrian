@@ -2,52 +2,33 @@ package org.mskcc.mondrian.internal.gui.heatmap;
 
 import java.awt.Color;
 import java.awt.Component;
+import java.awt.Font;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.Shape;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.List;
-import java.util.Map;
-import java.util.Vector;
 
 import javax.swing.BorderFactory;
 import javax.swing.JLabel;
 import javax.swing.JScrollPane;
 import javax.swing.JTable;
 import javax.swing.JViewport;
+import javax.swing.UIManager;
 import javax.swing.border.Border;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
-import javax.swing.table.AbstractTableModel;
+import javax.swing.table.DefaultTableCellRenderer;
+import javax.swing.table.JTableHeader;
 import javax.swing.table.TableColumn;
-import javax.swing.table.TableColumnModel;
-import javax.swing.table.TableModel;
 
-import org.cytoscape.model.CyColumn;
-import org.cytoscape.model.CyRow;
-import org.cytoscape.model.CyTable;
 import org.mskcc.mondrian.internal.MondrianApp;
-import org.mskcc.mondrian.internal.colorgradient.ColorGradientMapper;
 import org.mskcc.mondrian.internal.configuration.MondrianConfiguration;
-import org.mskcc.mondrian.internal.gui.heatmap.HeatmapPanelConfiguration.CELL_DISPLAY;
 
 /*
- *  Prevent the specified number of columns from scrolling horizontally in
- *  the scroll pane. The table must already exist in the scroll pane.
- *
- *  The functionality is accomplished by creating a second JTable (fixed)
- *  that will share the TableModel and SelectionModel of the main table.
- *  This table will be used as the row header of the scroll pane.
- *
- *  The fixed table created can be accessed by using the getFixedTable()
- *  method. will be returned from this method. It will allow you to:
- *
- *  You can change the model of the main table and the change will be
- *  reflected in the fixed model. However, you cannot change the structure
- *  of the model.
+ *  The table that shows the Heatmap
  *  
  *  Original code by Rob Camick 
  *  See http://tips4java.wordpress.com/2008/11/05/fixed-column-table/
@@ -56,54 +37,37 @@ public class HeatmapTable implements ChangeListener, PropertyChangeListener {
 	private JTable main;
 	private JTable fixed;
 	private JScrollPane scrollPane;
+	private HeatmapTableModel model;
 
 	/*
 	 * Specify the number of columns to be fixed and the scroll pane containing
 	 * the table.
 	 */
-	public HeatmapTable(int fixedColumns, JScrollPane scrollPane) {
+	public HeatmapTable(JScrollPane scrollPane, HeatmapTableModel model) {
 		this.scrollPane = scrollPane;
-
-		main = ((JTable) scrollPane.getViewport().getView());
-		main.setAutoCreateColumnsFromModel(false);
+		this.model = model;
+		updateCyTable();
+	}
+	
+	public void updateCyTable() {
+		//int nRow = cyTable.getRowCount();
+		this.main = new JTable(model.getRowCount(), model.getColumnCount());
 		main.addPropertyChangeListener(this);
 
 		// Use the existing table to create a new table sharing
 		// the DataModel and ListSelectionModel
-
-		int totalColumns = main.getColumnCount();
-
-		fixed = new JTable();
-		fixed.setAutoCreateColumnsFromModel(false);
-		fixed.setModel(main.getModel());
-		fixed.setSelectionModel(main.getSelectionModel());
-		fixed.setFocusable(false);
-
-		// Remove the fixed columns from the main table
-		// and add them to the fixed table
-
-		for (int i = 0; i < fixedColumns; i++) {
-			TableColumnModel columnModel = main.getColumnModel();
-			TableColumn column = columnModel.getColumn(0);
-			columnModel.removeColumn(column);
-			fixed.getColumnModel().addColumn(column);
-		}
+		main.setModel(this.model);
+		scrollPane.getViewport().setView(main);
 
 		// Add the fixed table to the scroll pane
-
-		fixed.setPreferredScrollableViewportSize(fixed.getPreferredSize());
+		fixed = new RowHeaderTable(main);
+		
 		scrollPane.setRowHeaderView(fixed);
-		scrollPane.setCorner(JScrollPane.UPPER_LEFT_CORNER,
-				fixed.getTableHeader());
+		scrollPane.setCorner(JScrollPane.UPPER_LEFT_CORNER, fixed.getTableHeader());
 
 		// Synchronize scrolling of the row header with the main table
-
 		scrollPane.getRowHeader().addChangeListener(this);
 		
-		
-		// Set table properties
-		//initTableModel();
-
 		// set our default renderer
 		main.setDefaultRenderer(Color.class, new HeatmapTableCellRenderer(true));
 
@@ -166,7 +130,7 @@ public class HeatmapTable implements ChangeListener, PropertyChangeListener {
 		}
 
 		if ("model".equals(e.getPropertyName())) {
-			fixed.setModel(main.getModel());
+			//fixed.setModel(main.getModel());
 		}
 	}
 	
@@ -700,44 +664,92 @@ public class HeatmapTable implements ChangeListener, PropertyChangeListener {
 		}
 	}	
 	
-	public void updateCyTable(CyTable table) {
-		TableModel model = new HeatmapTableModel(table);
-		main.setModel(model);
-		main.getTableHeader().resizeAndRepaint();
-		main.revalidate();		
+	public Object getRowHeader(int row) {
+		return null;
 	}
 	
 	@SuppressWarnings("serial")
-	class HeatmapTableModel extends AbstractTableModel {
-		private CyTable cyTable;
-		
-		public HeatmapTableModel(CyTable cyTable) {
-			super();
-			this.cyTable = cyTable;
+	class RowHeaderTable extends JTable {
+		private JTable main;
+		public RowHeaderTable(JTable main) {
+			this.main = main;
+			
+			setFocusable( false );
+			setAutoCreateColumnsFromModel( false );
+			setSelectionModel( main.getSelectionModel() );
+			
+			TableColumn column = new TableColumn();
+			column.setHeaderValue(" ");
+			addColumn( column );
+			column.setCellRenderer(new RowNumberRenderer());
+			
+			getColumnModel().getColumn(0).setPreferredWidth(150);
+			setPreferredScrollableViewportSize(getPreferredSize());
 		}
+		
+		/*
+		 *  Delegate method to main table
+		 */
 		@Override
 		public int getRowCount() {
-			return cyTable.getRowCount();
-		}
-
-		@Override
-		public int getColumnCount() {
-			return cyTable.getColumns().size();
-		}
-
-		@Override
-		public Object getValueAt(int rowIndex, int columnIndex) {
-			CyRow row = cyTable.getAllRows().get(rowIndex);
-			CyColumn col = new ArrayList<CyColumn>(cyTable.getColumns()).get(columnIndex);
-			return row.getRaw(col.getName());
-		}
+			return main.getRowCount();
+		}	
 		
 		@Override
-		public String getColumnName(int column) {
-			List<CyColumn> cols = new ArrayList<CyColumn>(cyTable.getColumns());
-			return cols.get(column).getName();
+		public int getRowHeight(int row) {
+			return main.getRowHeight(row);
+		}	
+		
+		@Override
+		public Object getValueAt(int row, int column) {
+			if (column >= 1) {
+				return "";
+			} else {
+				return model.getRowName(row);
+			}
 		}
-	}	
+		
+		/*
+		 *  Don't edit data in the main TableModel by mistake
+		 */
+		@Override
+		public boolean isCellEditable(int row, int column) {
+			return false;
+		}		
+		
+		/*
+		 *  Borrow the renderer from JDK1.4.2 table header
+		 */
+		@SuppressWarnings("serial")
+		private class RowNumberRenderer extends DefaultTableCellRenderer {
+			public RowNumberRenderer() {
+				setHorizontalAlignment(JLabel.CENTER);
+			}
+
+			public Component getTableCellRendererComponent(JTable table,
+					Object value, boolean isSelected, boolean hasFocus,
+					int row, int column) {
+				if (table != null) {
+					JTableHeader header = table.getTableHeader();
+
+					if (header != null) {
+						setForeground(header.getForeground());
+						setBackground(header.getBackground());
+						setFont(header.getFont());
+					}
+				}
+
+				if (isSelected) {
+					setFont( getFont().deriveFont(Font.BOLD) );
+				}
+
+				setText((value == null) ? "" : value.toString());
+				setBorder(UIManager.getBorder("TableHeader.cellBorder"));
+
+				return this;
+			}
+		}		
+	}
 }
 
 

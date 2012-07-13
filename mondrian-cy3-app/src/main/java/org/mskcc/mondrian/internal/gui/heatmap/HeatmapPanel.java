@@ -54,8 +54,8 @@ TableAddedListener, TableDeletedListener, RowsSetListener, CytoPanelComponent, A
 	private JComboBox constantPropertyTypeComboBox;
 	private JComboBox constantPropertyComboBox;
 	private JCheckBox hideGenesCheckBox;
-	private HeatmapTable heatmapTable;
 	private HeatmapPanelConfiguration configuration;
+	private JScrollPane scrollPane;
 
 	/**
 	 * Create the panel.
@@ -123,14 +123,8 @@ TableAddedListener, TableDeletedListener, RowsSetListener, CytoPanelComponent, A
 		JButton columnEndButton = new JButton(">|");
 		columnPane.add(columnEndButton);
 		
-		JScrollPane scrollPane = new JScrollPane();
+		scrollPane = new JScrollPane();
 		add(scrollPane);
-		
-		table_1 = new JTable(20, 10);
-		table_1.setAutoResizeMode(JTable.AUTO_RESIZE_OFF);
-		table_1.getColumnModel().getColumn(0).setPreferredWidth(150);
-		scrollPane.setViewportView(table_1);
-		heatmapTable = new HeatmapTable(1, scrollPane);
 		
 		JPanel rowPane = new JPanel();
 		add(rowPane);
@@ -309,7 +303,18 @@ TableAddedListener, TableDeletedListener, RowsSetListener, CytoPanelComponent, A
 			case DATA_TYPE:
 				GeneticProfile profile = (GeneticProfile)constantPropertyComboBox.getSelectedItem();
 				CyTable table = config.getCurrentTableByProfile(network, profile);
+				HeatmapTableModel model = new CyTableHeatmapTableModel(table);
+				HeatmapTable heatmapTable = new HeatmapTable(scrollPane, model);
+				scrollPane.revalidate();
+				revalidate();
+				/*
+				table_1 = new JTable(20, 10);
+				table_1.setAutoResizeMode(JTable.AUTO_RESIZE_OFF);
+				table_1.getColumnModel().getColumn(0).setPreferredWidth(150);
+				scrollPane.setViewportView(table_1);
+				heatmapTable = new HeatmapTable(1, scrollPane);
 				heatmapTable.updateCyTable(table);
+				*/
 				break;
 			case SAMPLE: 
 				break;
