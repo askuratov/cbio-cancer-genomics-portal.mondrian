@@ -9,8 +9,13 @@ import org.cytoscape.model.CyColumn;
 import org.cytoscape.model.CyIdentifiable;
 import org.cytoscape.model.CyRow;
 import org.cytoscape.model.CyTable;
-import org.mskcc.mondrian.internal.configuration.MondrianCyTable;
 
+/**
+ * A heatmap table model that wraps a CyTable object. Data are based
+ * on the CyTable. The SUID column is used as the row haeder. 
+ * 
+ * @author Dazhi Jiao
+ */
 @SuppressWarnings("serial")
 public class CyTableHeatmapTableModel extends HeatmapTableModel {
 	private CyTable cyTable;

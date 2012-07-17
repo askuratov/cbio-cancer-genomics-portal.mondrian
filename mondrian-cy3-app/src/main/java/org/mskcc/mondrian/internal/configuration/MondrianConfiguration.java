@@ -397,6 +397,41 @@ public class MondrianConfiguration {
 		return null;
 	}
 	
+	/**
+	 * Returns list of current genetic profiles. 
+	 * 
+	 * @param network
+	 * @return
+	 */
+	public List<GeneticProfile> getCurrentGeneticProfiles(CyNetwork network) {
+		CyTable metaTable = getMondrianMetaTable(network);
+		List<GeneticProfile> profiles = new ArrayList<GeneticProfile>();
+		Collection<CyRow> rows = metaTable.getMatchingRows("current", true);
+		for (CyRow cyRow: rows) {
+			GeneticProfile profile = new GeneticProfile(cyRow.get("genetic_profile_id", String.class), 
+					cyRow.get("genetic_profile_name", String.class),  
+					cyRow.get("genetic_profile_description", String.class), 
+					cyRow.get("genetic_profile_type", String.class));
+			profiles.add(profile);
+		}
+		return profiles;
+	}
+	
+	public CaseList getCurrentCaseList(CyNetwork network) {
+		CyTable metaTable = getMondrianMetaTable(network);
+		Collection<CyRow> rows = metaTable.getMatchingRows("current", true);
+		if (rows.isEmpty()) {
+			return null;
+		}
+		CyRow cyRow = rows.iterator().next();
+		List<String> cases = cyRow.getList("case_list_cases", String.class);
+		CaseList caseList = new CaseList(cyRow.get("case_list_id", String.class), 
+				cyRow.get("case_list_name", String.class),
+				cyRow.get("case_list_description", String.class),
+				cases.toArray(new String[cases.size()]));
+		return caseList;
+	}
+	
 	public CyTable getTableByProfile(CyNetwork network, String studyId, String profileId) {
 		return null;
 	}

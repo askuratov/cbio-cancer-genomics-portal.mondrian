@@ -89,7 +89,26 @@ TableAddedListener, TableDeletedListener, RowsSetListener, CytoPanelComponent, A
 		constantPropertyTypeComboBox.setModel(new DefaultComboBoxModel(org.mskcc.mondrian.internal.gui.heatmap.HeatmapPanelConfiguration.PROPERTY_TYPE.values()));
 		headerPane.add(constantPropertyTypeComboBox);
 		
-		constantPropertyComboBox = new JComboBox();
+		constantPropertyComboBox = new JComboBox(){
+            /** 
+             * @inherited <p>
+             */
+            @Override
+            public Dimension getMaximumSize() {
+                Dimension max = super.getMaximumSize();
+                max.height = getPreferredSize().height;
+                return max;
+            }
+
+        };
+        constantPropertyComboBox.addActionListener(new ActionListener() {
+			
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				DialogTaskManager taskManager = MondrianApp.getInstance().getTaskManager();
+				taskManager.execute(new TaskIterator(new UpdateHeatmapTableTask()));	
+			}
+		});
 		headerPane.add(constantPropertyComboBox);
 		
 		Component horizontalGlue = Box.createHorizontalGlue();
@@ -279,12 +298,12 @@ TableAddedListener, TableDeletedListener, RowsSetListener, CytoPanelComponent, A
 				constantPropertyComboBox.setModel(new DefaultComboBoxModel(list.toArray()));				
 				break;
 			case DATA_TYPE:
-				//List<GeneticProfile> profiles = config.getGeneticProfiles(network, study);
-				//constantPropertyComboBox.setModel(new DefaultComboBoxModel(profiles.toArray()));
+				List<GeneticProfile> profiles = config.getCurrentGeneticProfiles(network);
+				constantPropertyComboBox.setModel(new DefaultComboBoxModel(profiles.toArray()));
 				break;
 			case SAMPLE:
-				//CaseList caseList = config.getNetworkCaseList(network.getSUID());
-				//constantPropertyComboBox.setModel(new DefaultComboBoxModel(caseList.getCases()));
+				CaseList caseList = config.getCurrentCaseList(network);
+				constantPropertyComboBox.setModel(new DefaultComboBoxModel(caseList.getCases()));
 				break;
 			}
 		}
