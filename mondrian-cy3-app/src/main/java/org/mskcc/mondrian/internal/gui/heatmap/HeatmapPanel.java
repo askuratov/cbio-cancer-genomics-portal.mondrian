@@ -50,7 +50,6 @@ import org.mskcc.mondrian.internal.gui.heatmap.HeatmapPanelConfiguration.PROPERT
 public class HeatmapPanel extends JPanel implements MondrianConfigurationListener, 
 TableAddedListener, TableDeletedListener, RowsSetListener, CytoPanelComponent, ActionListener {
 	
-	private JTable table_1;
 	private JComboBox constantPropertyTypeComboBox;
 	private JComboBox constantPropertyComboBox;
 	private JCheckBox hideGenesCheckBox;
@@ -102,7 +101,6 @@ TableAddedListener, TableDeletedListener, RowsSetListener, CytoPanelComponent, A
 
         };
         constantPropertyComboBox.addActionListener(new ActionListener() {
-			
 			@Override
 			public void actionPerformed(ActionEvent e) {
 				DialogTaskManager taskManager = MondrianApp.getInstance().getTaskManager();
@@ -326,14 +324,6 @@ TableAddedListener, TableDeletedListener, RowsSetListener, CytoPanelComponent, A
 				HeatmapTable heatmapTable = new HeatmapTable(scrollPane, model);
 				scrollPane.revalidate();
 				revalidate();
-				/*
-				table_1 = new JTable(20, 10);
-				table_1.setAutoResizeMode(JTable.AUTO_RESIZE_OFF);
-				table_1.getColumnModel().getColumn(0).setPreferredWidth(150);
-				scrollPane.setViewportView(table_1);
-				heatmapTable = new HeatmapTable(1, scrollPane);
-				heatmapTable.updateCyTable(table);
-				*/
 				break;
 			case SAMPLE: 
 				break;
