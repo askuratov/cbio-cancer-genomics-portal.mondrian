@@ -209,10 +209,6 @@ public class MondrianConfiguration {
 	 */
 	public void registerMondrianTables(CyNetwork network, Collection<MondrianCyTable> mondrianTables) {
 		MondrianApp app = MondrianApp.getInstance();
-		CyNetworkTableManager networkTableManager = app.getNetworkTableMangager();
-		
-		System.out.println("Number of tables: " + networkTableManager.getTables(network, CyNode.class).size());
-		System.out.println("Number of metatables: " + networkTableManager.getTables(network, CyTable.class).size());
 		
 		// Add imported table and study, profile, caseList to the mondrian meta table
 		CyTable metaTable = getMondrianMetaTable(network);
@@ -235,7 +231,6 @@ public class MondrianConfiguration {
 			app.getTableManager().addTable(metaTable);
 			setMondrianMetaTable(network, metaTable);
 		} else { // set all rows not current
-			System.out.println("number of rows in metaTable: " + metaTable.getAllRows().size());
 			List<CyRow> rows = metaTable.getAllRows();
 			for (CyRow row: rows) {
 				row.set("current", false);
@@ -295,17 +290,16 @@ public class MondrianConfiguration {
 	}
 	
 	/**
-	 * Lists all the CyTable objects that are imported for a cancer study and attached to
+	 * Lists all the CyTable objects that are imported and marked as current
 	 * a network
 	 * @param network
-	 * @param study
 	 * @return
 	 */
-	public List<MondrianCyTable> getMondrianTables(CyNetwork network, CancerStudy study) {
+	public List<MondrianCyTable> getCurrentMondrianTables(CyNetwork network) {
 		List<MondrianCyTable> tables = new ArrayList<MondrianCyTable>();
 		CyTable metaTable = getMondrianMetaTable(network);
 		if (metaTable == null) return tables;
-		Collection<CyRow> rows = metaTable.getMatchingRows("study_id", study.getStudyId());
+		Collection<CyRow> rows = metaTable.getMatchingRows("current", true);
 		for (CyRow cyRow : rows) {
 			GeneticProfile profile = new GeneticProfile(cyRow.get("genetic_profile_id", String.class), 
 					cyRow.get("genetic_profile_name", String.class),  
@@ -316,6 +310,10 @@ public class MondrianConfiguration {
 					cyRow.get("case_list_name", String.class),
 					cyRow.get("case_list_description", String.class),
 					cases.toArray(new String[cases.size()]));
+			String studyId = cyRow.get("study_id", String.class);
+			String studyName = cyRow.get("study_name", String.class);
+			String studyDescription = cyRow.get("study_description", String.class);
+			CancerStudy study = new CancerStudy(studyId, studyName, studyDescription);			
 			String namespace = getTableNamespase(study, profile, caseList);
 			CyNetworkTableManager networkTableManager = MondrianApp.getInstance().getNetworkTableMangager();
 			CyTable table = networkTableManager.getTable(network, CyNode.class, namespace);
@@ -369,7 +367,6 @@ public class MondrianConfiguration {
 		List<CyRow> allRows = metaTable.getAllRows();
 		for (CyRow cyRow : allRows) {
 			String studyId = cyRow.get("study_id", String.class);
-			System.out.println(studyId);
 			if (idset.contains(studyId)) continue;  // already added
 			String studyName = cyRow.get("study_name", String.class);
 			String studyDescription = cyRow.get("study_description", String.class);
