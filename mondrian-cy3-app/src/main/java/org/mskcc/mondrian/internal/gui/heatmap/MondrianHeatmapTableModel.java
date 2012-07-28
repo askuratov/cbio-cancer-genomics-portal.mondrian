@@ -3,17 +3,12 @@ package org.mskcc.mondrian.internal.gui.heatmap;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
-import java.util.Random;
-
-import javax.naming.OperationNotSupportedException;
 
 import org.cytoscape.model.CyColumn;
 import org.cytoscape.model.CyIdentifiable;
 import org.cytoscape.model.CyNetwork;
-import org.cytoscape.model.CyNode;
 import org.cytoscape.model.CyRow;
 import org.cytoscape.model.CyTable;
-import org.mskcc.mondrian.client.CaseList;
 import org.mskcc.mondrian.client.GeneticProfile;
 import org.mskcc.mondrian.internal.MondrianApp;
 import org.mskcc.mondrian.internal.configuration.MondrianConfiguration;
