@@ -11,6 +11,9 @@ import org.cytoscape.model.CyNetworkTableManager;
 import org.cytoscape.model.CyTableFactory;
 import org.cytoscape.model.CyTableManager;
 import org.cytoscape.service.util.AbstractCyActivator;
+import org.cytoscape.view.vizmap.VisualMappingFunctionFactory;
+import org.cytoscape.view.vizmap.VisualMappingManager;
+import org.cytoscape.view.vizmap.VisualStyleFactory;
 import org.cytoscape.work.swing.DialogTaskManager;
 import org.osgi.framework.BundleContext;
 
@@ -28,13 +31,20 @@ public class CyActivator extends AbstractCyActivator {
 		CyApplicationManager manager = getService(bc,CyApplicationManager.class);
 		CyTableFactory tableFactory = getService(bc, CyTableFactory.class);
 		CyTableManager tableManager = getService(bc, CyTableManager.class);
+		VisualMappingFunctionFactory continuousVmfFactory = getService(bc, VisualMappingFunctionFactory.class, "(mapping.type=continuous)");
+		VisualMappingFunctionFactory discreteVmfFactory = getService(bc, VisualMappingFunctionFactory.class, "(mapping.type=discrete)");
+		VisualMappingFunctionFactory passthroughVmfFactory = getService(bc, VisualMappingFunctionFactory.class, "(mapping.type=passthrough)");
+		VisualMappingManager visualMappingManager = getService(bc, VisualMappingManager.class);
+		VisualStyleFactory visualStyleFactory = getService(bc, VisualStyleFactory.class);		
 		CyNetworkTableManager networkTableManager = getService(bc,
 				CyNetworkTableManager.class);
 
 		// create our gui
 		MondrianApp container = MondrianApp.getInstance(desktop,
 				networkManager, taskManager, manager, tableFactory,
-				tableManager, networkTableManager);
+				tableManager, networkTableManager, continuousVmfFactory, 
+				discreteVmfFactory, passthroughVmfFactory, visualMappingManager,
+				visualStyleFactory);
 
 		// TODO: populate the properties
 		registerService(bc, container.getDataTypesPane(),

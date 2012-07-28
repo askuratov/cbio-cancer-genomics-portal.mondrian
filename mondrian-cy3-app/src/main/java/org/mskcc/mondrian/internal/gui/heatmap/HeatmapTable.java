@@ -5,10 +5,10 @@ import java.awt.Component;
 import java.awt.Font;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
+import java.awt.Paint;
 import java.awt.Shape;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
-import java.util.ArrayList;
 import java.util.List;
 
 import javax.swing.BorderFactory;
@@ -24,20 +24,24 @@ import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.JTableHeader;
 import javax.swing.table.TableColumn;
 
+import org.cytoscape.view.presentation.property.BasicVisualLexicon;
+import org.cytoscape.view.vizmap.VisualMappingFunctionFactory;
+import org.cytoscape.view.vizmap.mappings.BoundaryRangeValues;
+import org.cytoscape.view.vizmap.mappings.ContinuousMapping;
 import org.mskcc.mondrian.internal.MondrianApp;
 import org.mskcc.mondrian.internal.configuration.MondrianConfiguration;
+import org.mskcc.mondrian.internal.gui.heatmap.HeatmapPanelConfiguration.CELL_DISPLAY;
 
 /*
  *  The table that shows the Heatmap
- *  
- *  Original code by Rob Camick 
- *  See http://tips4java.wordpress.com/2008/11/05/fixed-column-table/
  */
 public class HeatmapTable implements ChangeListener, PropertyChangeListener {
 	private JTable main;
 	private JTable fixed;
 	private JScrollPane scrollPane;
 	private HeatmapTableModel model;
+	private ColorGradientTheme colorTheme;
+	private CELL_DISPLAY heatmapMode = CELL_DISPLAY.SINGLE;
 
 	/*
 	 * Specify the number of columns to be fixed and the scroll pane containing
@@ -49,9 +53,23 @@ public class HeatmapTable implements ChangeListener, PropertyChangeListener {
 		updateCyTable();
 	}
 	
+	public void setHeatmapMode(CELL_DISPLAY mode) {
+		this.heatmapMode = mode;
+	}
+
+	public CELL_DISPLAY getHeatmapMode() {
+		return heatmapMode;
+	}
+	
+	@SuppressWarnings("serial")
 	public void updateCyTable() {
 		//int nRow = cyTable.getRowCount();
-		this.main = new JTable(model.getRowCount(), model.getColumnCount());
+		this.main = new JTable(model.getRowCount(), model.getColumnCount()) {
+			@SuppressWarnings({ "unchecked", "rawtypes" })
+			public Class getColumnClass(int c) {
+				return Double.class;
+			}
+		};
 		main.addPropertyChangeListener(this);
 
 		// Use the existing table to create a new table sharing
@@ -69,7 +87,11 @@ public class HeatmapTable implements ChangeListener, PropertyChangeListener {
 		scrollPane.getRowHeader().addChangeListener(this);
 		
 		// set our default renderer
-		main.setDefaultRenderer(Color.class, new HeatmapTableCellRenderer(true));
+		main.setDefaultRenderer(Double.class, new HeatmapTableCellRenderer(true));
+		//JSparklinesBarChartTableCellRenderer renderer = new JSparklinesBarChartTableCellRenderer(PlotOrientation.HORIZONTAL, -100d, 100d);
+		//renderer.showAsHeatMap(ColorGradient.RedBlackGreen);
+		//main.setDefaultRenderer(Double.class, renderer);
+		
 
 		// we are not focusable
 		main.setFocusable(false);
@@ -152,42 +174,6 @@ public class HeatmapTable implements ChangeListener, PropertyChangeListener {
 		return toReturn;
 	}
 	
-	
-	//**************************************************************************
-	// CellObject definition
-
-	/**
-	 * Class which encapsulates properties of cell used by our custom renderer.
-	 */
-	public static class CellObject {
-
-		// members
-		final private String rowName;
-		final private String columnProperty;
-		final private Color cellColor;
-		final private Double measurement;
-
-		// accessors
-		public String getRowName() { return rowName; }
-		public String getColumnName() { return columnProperty; }
-		public Color getCellColor() { return cellColor; }
-		public Double getMeasurement() { return measurement; }
-
-		/*
-		 * Constructor (private).
-		 *		 
-		 * @param rowProperty String
-		 * @param cellColor Color
-		 * @param measurement Double
-		 */
-		public CellObject(String rowProperty, String columnProperty, Color cellColor, Double measurement) {
-			this.rowName = rowProperty;
-			this.columnProperty = columnProperty;
-			this.cellColor = cellColor;
-			this.measurement = measurement;
-		}
-	}	
-	
 	//**************************************************************************
 	// HeatmapWidgetCellRenderer definition
 
@@ -200,7 +186,6 @@ public class HeatmapTable implements ChangeListener, PropertyChangeListener {
 
 		public static final int MAX_NUM_TRIANGLES = 4;
 		// members
-		private CellObject cellObject;
 		private List<Color> backgroundColors;
 		private final boolean isBordered;
 		private final Color selectedColor;
@@ -209,6 +194,7 @@ public class HeatmapTable implements ChangeListener, PropertyChangeListener {
 		private final java.awt.BasicStroke stroke = new java.awt.BasicStroke(0.5f);
 		private final Color BORDER_COLOR = Color.GRAY;
 		private final java.text.NumberFormat formatter = new java.text.DecimalFormat("#,###,###.##");
+		private Color paint;
 
 		/**
 		 * Constructor.
@@ -246,10 +232,20 @@ public class HeatmapTable implements ChangeListener, PropertyChangeListener {
 			}
 
 			// get ref to cell object
-			cellObject = (CellObject)object;
+			//cellObject = (CellObject)object;
 
-			// get our colors
-			List<String> measurements = setColors(cellObject);
+			// get range of values
+			// 
+			VisualMappingFunctionFactory vmfFactory = MondrianApp.getInstance().getContinuousVmfFactory();
+			
+			HeatmapTableModel model = (HeatmapTableModel)table.getModel();
+			String colName = model.getColumnName(column);
+			ContinuousMapping<Double, Paint> cMapping = (ContinuousMapping<Double, Paint>)vmfFactory.createVisualMappingFunction(colName, Double.class, BasicVisualLexicon.NODE_FILL_COLOR);
+			ColorGradientTheme colorTheme = MondrianApp.getInstance().getMondrianConfiguration().getColorTheme();
+			cMapping.addPoint(model.getMin(), new BoundaryRangeValues<Paint>(colorTheme.getMinColor(), colorTheme.getMinColor(), colorTheme.getMinColor()));
+			cMapping.addPoint(model.getMean(), new BoundaryRangeValues<Paint>(colorTheme.getCenterColor(), colorTheme.getCenterColor(), colorTheme.getCenterColor()));
+			cMapping.addPoint(model.getMax(), new BoundaryRangeValues<Paint>(colorTheme.getMaxColor(), colorTheme.getMaxColor(), colorTheme.getMaxColor()));
+			this.paint = (Color)cMapping.getMappedValue(model.getCyRow(row, column));
 
 			// swap/set borders
 			if (isBordered) {
@@ -259,7 +255,7 @@ public class HeatmapTable implements ChangeListener, PropertyChangeListener {
 					}
 					setBorder(selectedBorder);
 				}
-				else {
+				else {	
 					if (unselectedBorder == null) {
 						unselectedBorder = BorderFactory.createEmptyBorder(0,0,0,0);
 					}
@@ -270,7 +266,6 @@ public class HeatmapTable implements ChangeListener, PropertyChangeListener {
 			// set tooltip
 			//TODO: setToolTipText(getToolTipText(measurements));
 
-			// outta here
 			return this;
 		}
 		
@@ -298,9 +293,9 @@ public class HeatmapTable implements ChangeListener, PropertyChangeListener {
 			
 			Graphics2D g2d = (Graphics2D)g;
 			g2d.setStroke(stroke);
-			switch (MondrianApp.getInstance().getMondrianConfiguration().getHeatmapCellDisplay()) {
+			switch (heatmapMode) {
 			    case SINGLE:
-				    g2d.setPaint(cellObject.getCellColor());
+			    	g2d.setPaint(this.paint);
 				    g2d.fillRect(0, 0, getWidth(), getHeight());
 				    break;
 				case TRIANGLES:
@@ -308,6 +303,7 @@ public class HeatmapTable implements ChangeListener, PropertyChangeListener {
 					displayTriangles(g2d);
 					g2d.setRenderingHint(java.awt.RenderingHints.KEY_ANTIALIASING, java.awt.RenderingHints.VALUE_ANTIALIAS_OFF);
 					break;
+				case NUMERIC:
 			    //case HEATSTRIP:
 				//	displayHeatStrip(g2d);
 				//	break;
@@ -487,72 +483,6 @@ public class HeatmapTable implements ChangeListener, PropertyChangeListener {
 
 			// close the shape
 			toReturn.closePath();
-
-			// outta here
-			return toReturn;
-		}
-
-		/**
-		 * Sets background color list.
-         *
-         * @param cellObject CellObject
-		 * @return List<String>
-		 */
-		private List<String> setColors(CellObject cellObject) {
-			backgroundColors = new ArrayList<Color>();
-			List<String> toReturn = new ArrayList<String>();
-			
-			HeatmapPanel heatmapPane = MondrianApp.getInstance().getHeatmapPane();
-			// only process if constant property is data type (that is row, col is gene / sample)
-			if (heatmapPane.getConstantPropertyType() == HeatmapPanelConfiguration.PROPERTY_TYPE.DATA_TYPE) {
-				//TODO: add all data type to backgroundColor
-				backgroundColors.add(cellObject.getCellColor());
-				// col is sample, row is gene
-//				final Vector<String> dataTypes = dataTypeMatrixManager.getLoadedDataTypes(false);
-//				for (String dataType : dataTypes) {
-//					Color color = mondrianConfiguration.getColorTheme().getNoDataColor();
-//					
-//					final DataTypeMatrix matrix = dataTypeMatrixManager.getDataTypeMatrix(dataType);
-//					final String gene = org.mskcc.mondrian.maps.GeneMapper.getGene(matrix,
-//																					  geneDescriptorsToGeneNamesMap.get(cellObject.getRowName()),
-//																					  Cytoscape.getNodeAttributes());
-//					
-//					if (gene != null) {
-//						final Double measurement = matrix.getMeasurement(gene, cellObject.getColumnProperty());
-//						final Double measurement = cellObject.getMeasurement();
-//						if (measurement != null) {
-//							//color = ColorGradientMapper.getColorGradient(mondrianConfiguration, gene, measurement, matrix);
-//							color = Color.green; // TODO: Fix this and use color gradient
-//							String measurementStr = measurement.toString();
-//							measurementStr = (measurementStr.equalsIgnoreCase("NaN")) ? "None" : measurementStr;
-//							if (matrix.isMutation()) {
-//								final Map<String, String> mutationsMap = matrix.getMutationMap();
-//								String mutation = mutationsMap.get(gene + MutationUtil.MUTATION_MAP_KEY_DELIMETER + cellObject.getColumnName());
-//								if (mutation == null || mutation.length() == 0) {
-//									toReturn.add(dataType + ": " + "None");
-//								}
-//								else {
-//									String mutationHtml = MutationUtil.getMutationHtml(mutation, false);
-//									toReturn.add(dataType + ":<br>" + mutationHtml);
-//								}
-//							}
-//							else {
-//								toReturn.add(dataType + ": " + measurementStr);
-//							}
-//						}
-//						else {
-//							toReturn.add(dataType + ": None");
-//						}
-//					}
-//					else {
-//						toReturn.add(dataType + ": None");
-//					}
-//					backgroundColors.add(color);
-//				}
-			}
-			else {
-				backgroundColors.add(cellObject.getCellColor());
-			}
 
 			// outta here
 			return toReturn;

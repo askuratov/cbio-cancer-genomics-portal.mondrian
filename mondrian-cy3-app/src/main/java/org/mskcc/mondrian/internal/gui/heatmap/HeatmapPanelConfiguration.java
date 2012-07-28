@@ -32,7 +32,7 @@ public class HeatmapPanelConfiguration {
 	public static enum CELL_DISPLAY {
 
 		// data types
-		SINGLE("Single"), TRIANGLES("Triangles");
+		NUMERIC("Numeric"), SINGLE("Single"), TRIANGLES("Triangles");
 		// HEATSTRIP("Heat Strips"),
 		// TILES("Tiles");
 

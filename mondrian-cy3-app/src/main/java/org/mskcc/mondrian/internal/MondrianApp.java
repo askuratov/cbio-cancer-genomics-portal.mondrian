@@ -18,6 +18,9 @@ import org.cytoscape.model.CyTable;
 import org.cytoscape.model.CyTableFactory;
 import org.cytoscape.model.CyTableManager;
 import org.cytoscape.model.SUIDFactory;
+import org.cytoscape.view.vizmap.VisualMappingFunctionFactory;
+import org.cytoscape.view.vizmap.VisualMappingManager;
+import org.cytoscape.view.vizmap.VisualStyleFactory;
 import org.cytoscape.work.swing.DialogTaskManager;
 import org.mskcc.mondrian.internal.configuration.ConfigurationChangedEvent;
 import org.mskcc.mondrian.internal.configuration.MondrianConfiguration;
@@ -44,7 +47,11 @@ public class MondrianApp extends AbstractCyAction implements MondrianConfigurati
 	private MondrianConfiguration mondrianConfiguration;
 	private HeatmapPanel heatmapPane;
 	private DataTypesPanel dataTypesPane;
-	
+	private VisualMappingFunctionFactory continuousVmfFactory;
+	private VisualMappingFunctionFactory discreteVmfFactory;
+	private VisualMappingFunctionFactory passthroughVmfFactory;
+	private VisualMappingManager visualMappingManager;
+	private VisualStyleFactory visualStyleFactory;
 	
 	protected static MondrianApp instance;
 	
@@ -54,15 +61,20 @@ public class MondrianApp extends AbstractCyAction implements MondrianConfigurati
 	
 	public static MondrianApp getInstance(CySwingApplication desktopApp, CyNetworkManager networkManager, DialogTaskManager taskManager, 
 			CyApplicationManager appManager, CyTableFactory tableFactory, CyTableManager tableManager,
-			CyNetworkTableManager networkTableManager) {
+			CyNetworkTableManager networkTableManager, VisualMappingFunctionFactory continuousVmfFactory, 
+			VisualMappingFunctionFactory discreteVmfFactory, VisualMappingFunctionFactory passthroughVmfFactory,
+			VisualMappingManager visualMappingManager, VisualStyleFactory visualStyleFactory) {
 		if (instance == null) {
-			instance = new MondrianApp(desktopApp, networkManager, taskManager, appManager, tableFactory, tableManager, networkTableManager);
+			instance = new MondrianApp(desktopApp, networkManager, taskManager, appManager, tableFactory, tableManager, networkTableManager, 
+					continuousVmfFactory, discreteVmfFactory, passthroughVmfFactory, visualMappingManager, visualStyleFactory);
 		}
 		return instance;
 	}
 
 	private MondrianApp(CySwingApplication desktopApp, CyNetworkManager networkManager, DialogTaskManager taskManager, CyApplicationManager appManager, 
-			CyTableFactory tableFactory, CyTableManager tableManager, CyNetworkTableManager networkTableManager) {
+			CyTableFactory tableFactory, CyTableManager tableManager, CyNetworkTableManager networkTableManager, VisualMappingFunctionFactory continuousVmfFactory, 
+			VisualMappingFunctionFactory discreteVmfFactory, VisualMappingFunctionFactory passthroughVmfFactory, 
+			VisualMappingManager visualMappingManager, VisualStyleFactory visualStyleFactory) {
 		super("Mondrian");
 		setPreferredMenu("Apps");
 		this.desktopApp = desktopApp;
@@ -72,6 +84,11 @@ public class MondrianApp extends AbstractCyAction implements MondrianConfigurati
 		this.tableFactory = tableFactory;
 		this.tableManager = tableManager;
 		this.networkTableMangager = networkTableManager;
+		this.continuousVmfFactory = continuousVmfFactory;
+		this.discreteVmfFactory = discreteVmfFactory;
+		this.passthroughVmfFactory = passthroughVmfFactory;
+		this.visualMappingManager = visualMappingManager;
+		this.visualStyleFactory = visualStyleFactory;
 		
 		mondrianConfiguration = new MondrianConfiguration();
 
@@ -203,6 +220,48 @@ public class MondrianApp extends AbstractCyAction implements MondrianConfigurati
 	public void setHeatmapPane(HeatmapPanel heatmapPane) {
 		this.heatmapPane = heatmapPane;
 	}
-	
-	
+
+	public VisualMappingFunctionFactory getContinuousVmfFactory() {
+		return continuousVmfFactory;
+	}
+
+	public void setContinuousVmfFactory(
+			VisualMappingFunctionFactory continuousVmfFactory) {
+		this.continuousVmfFactory = continuousVmfFactory;
+	}
+
+	public VisualMappingFunctionFactory getDiscreteVmfFactory() {
+		return discreteVmfFactory;
+	}
+
+	public void setDiscreteVmfFactory(
+			VisualMappingFunctionFactory discreteVmfFactory) {
+		this.discreteVmfFactory = discreteVmfFactory;
+	}
+
+	public VisualMappingFunctionFactory getPassthroughVmfFactory() {
+		return passthroughVmfFactory;
+	}
+
+	public void setPassthroughVmfFactory(
+			VisualMappingFunctionFactory passthroughVmfFactory) {
+		this.passthroughVmfFactory = passthroughVmfFactory;
+	}
+
+	public VisualMappingManager getVisualMappingManager() {
+		return visualMappingManager;
+	}
+
+	public void setVisualMappingManager(VisualMappingManager visualMappingManager) {
+		this.visualMappingManager = visualMappingManager;
+	}
+
+	public VisualStyleFactory getVisualStyleFactory() {
+		return visualStyleFactory;
+	}
+
+	public void setVisualStyleFactory(VisualStyleFactory visualStyleFactory) {
+		this.visualStyleFactory = visualStyleFactory;
+	}
+
 }

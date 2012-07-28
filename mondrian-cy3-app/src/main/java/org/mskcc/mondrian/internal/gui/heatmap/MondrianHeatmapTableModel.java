@@ -1,7 +1,13 @@
 package org.mskcc.mondrian.internal.gui.heatmap;
 
+import java.util.Collection;
 import java.util.List;
+import java.util.Map;
+import java.util.Random;
 
+import javax.naming.OperationNotSupportedException;
+
+import org.cytoscape.model.CyColumn;
 import org.cytoscape.model.CyIdentifiable;
 import org.cytoscape.model.CyNetwork;
 import org.cytoscape.model.CyNode;
@@ -31,6 +37,9 @@ public class MondrianHeatmapTableModel extends HeatmapTableModel {
 	private List<MondrianCyTable> tables;
 	private PROPERTY_TYPE propertyType;
 	private Object propertyValue;
+	private double min = Double.NaN;
+	private double max = Double.NaN;
+	private double mean = Double.NaN;
 	
 	public MondrianHeatmapTableModel(List<MondrianCyTable> tables, PROPERTY_TYPE type, Object value) {
 		this.tables = tables;
@@ -41,6 +50,10 @@ public class MondrianHeatmapTableModel extends HeatmapTableModel {
 	public void setProperty(PROPERTY_TYPE propertyType, Object propertyValue) {
 		this.propertyType = propertyType;
 		this.propertyValue = propertyValue;
+		// reset values
+		this.min = Double.NaN;
+		this.max = Double.NaN;
+		this.mean = Double.NaN;
 	}
 	
 	@Override
@@ -126,4 +139,143 @@ public class MondrianHeatmapTableModel extends HeatmapTableModel {
 		}
 		return null;		
 	}
+
+	@Override
+	public CyRow getCyRow(final int row, final int col) {
+		return new CyRow() {
+
+			@Override
+			public <T> T get(String arg0, Class<? extends T> arg1) {
+				return arg1.cast(getValueAt(row, col));
+			}
+
+			@Override
+			public <T> T get(String arg0, Class<? extends T> arg1, T arg2) {
+				throw new UnsupportedOperationException();
+			}
+
+			@Override
+			public Map<String, Object> getAllValues() {
+				throw new UnsupportedOperationException();
+			}
+
+			@Override
+			public <T> List<T> getList(String arg0, Class<T> arg1) {
+				throw new UnsupportedOperationException();
+			}
+
+			@Override
+			public <T> List<T> getList(String arg0, Class<T> arg1, List<T> arg2) {
+				throw new UnsupportedOperationException();
+			}
+
+			@Override
+			public Object getRaw(String arg0) {
+				throw new UnsupportedOperationException();
+			}
+
+			@Override
+			public CyTable getTable() {
+				throw new UnsupportedOperationException();
+			}
+
+			@Override
+			public boolean isSet(String arg0) {
+				return true;
+			}
+
+			@Override
+			public <T> void set(String arg0, T arg1) {
+				throw new UnsupportedOperationException();
+			}
+			
+		};
+	}
+
+	@Override
+	public Double getMin() {
+		if (Double.isNaN(this.min)) summary();
+		return this.min;
+	}
+
+	@Override
+	public Double getMax() {
+		if (Double.isNaN(this.max)) summary();
+		return this.max;
+	}	
+
+	@Override
+	public Double getMean() {
+		if (Double.isNaN(this.mean)) summary();
+		return this.mean;
+	}
+
+	private void summary() {
+		int n = 0;
+		Double total = 0.0d;
+		Double max = Double.MIN_VALUE;
+		Double min = Double.MAX_VALUE;			
+		switch(propertyType) {
+		case GENE:
+			for (MondrianCyTable mtable: tables) {
+				CyTable cyTable = mtable.getTable();
+				CyRow cyRow = cyTable.getRow(propertyValue);
+				Collection<Object> values = cyRow.getAllValues().values();
+				for (Object object : values) {
+					if (object instanceof Long) continue; // SUID column
+					else if (object instanceof String) continue; // MUTATION
+					Double v = (Double)object;
+					if (!Double.isNaN(v)) {
+						if (v > max) max = v;
+						if (v < min) min = v;
+						total += v;
+						n ++;
+					}
+				}				
+			}
+			break;
+		case DATA_TYPE: 
+			for (MondrianCyTable mtable : tables) {
+				if (mtable.getProfile().getId().equals(((GeneticProfile)propertyValue).getId())) {
+					CyTable cyTable = mtable.getTable();
+					List<CyRow> cyRows = cyTable.getAllRows();
+					for (CyRow cyRow : cyRows) {
+						Collection<Object> values = cyRow.getAllValues().values();
+						for (Object object : values) {
+							if (object instanceof Long) continue; // SUID column
+							else if (object instanceof String) continue; // MUTATION
+							Double v = (Double)object;
+							if (!Double.isNaN(v)) {
+								if (v > max) max = v;
+								if (v < min) min = v;
+								total += v;
+								n ++;
+							}
+						}
+					}
+				}
+			}		
+			break;
+		case SAMPLE:
+			for (MondrianCyTable mtable : tables) {
+				CyTable cyTable = mtable.getTable();
+				CyColumn cyColumn = cyTable.getColumn((String)propertyValue);
+				List<Object> values = cyColumn.getValues(cyColumn.getType());
+				for (Object object : values) {
+					if (object instanceof String) continue;
+					Double v = (Double)object;
+					if (!Double.isNaN(v)) {
+						if (v > max) max = v;
+						if (v < min) min = v;
+						total += v;
+						n ++;
+					}					
+				}
+			}		
+			break;
+		}	
+		this.max = max;
+		this.min = min;
+		this.mean = n == 0 ? 0.0 : total/n;		
+	}	
 }

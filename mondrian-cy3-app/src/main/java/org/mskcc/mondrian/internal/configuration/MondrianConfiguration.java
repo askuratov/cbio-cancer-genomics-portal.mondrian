@@ -17,15 +17,13 @@ import org.cytoscape.model.CyNode;
 import org.cytoscape.model.CyRow;
 import org.cytoscape.model.CyTable;
 import org.cytoscape.model.CyTableManager;
-import org.cytoscape.model.CyTable.SavePolicy;
 import org.mskcc.mondrian.client.CancerStudy;
 import org.mskcc.mondrian.client.CaseList;
 import org.mskcc.mondrian.client.DataTypeMatrix;
 import org.mskcc.mondrian.client.GeneticProfile;
 import org.mskcc.mondrian.internal.MondrianApp;
-import org.mskcc.mondrian.internal.colorgradient.ColorGradientRange;
-import org.mskcc.mondrian.internal.colorgradient.ColorGradientTheme;
 import org.mskcc.mondrian.internal.configuration.ConfigurationChangedEvent.Type;
+import org.mskcc.mondrian.internal.gui.heatmap.ColorGradientTheme;
 import org.mskcc.mondrian.internal.gui.heatmap.HeatmapPanelConfiguration.CELL_DISPLAY;
 
 /**
@@ -47,8 +45,6 @@ public class MondrianConfiguration {
 	 * The attribute in the network that stores the geneSymbolAttribute
 	 */
 	private Map<Long, String> networkGeneSymbolAttrMap = new HashMap<Long, String>();
-
-	private CELL_DISPLAY heatmapWidgetCellDisplay;
 
 	public MondrianConfiguration() {
 		colorGradientTheme = ColorGradientTheme.BLUE_RED_GRADIENT_THEME;
@@ -73,35 +69,6 @@ public class MondrianConfiguration {
 
 	}
 
-	public void setColorGradientRange(ColorGradientRange colorGradientRange) {
-		// check args
-		if (colorGradientRange == null)
-			return;
-
-		// if (dataTypeMatrix != null) {
-		// ColorGradientRange stored =
-		// dataTypeMatrixToRangeMap.get(dataTypeMatrix);
-		// stored.setMinValue(colorGradientRange.getMinValue());
-		// stored.setCenterLowValue(colorGradientRange.getCenterLowValue());
-		// stored.setCenterHighValue(colorGradientRange.getCenterHighValue());
-		// stored.setMaxValue(colorGradientRange.getMaxValue());
-		// notifyConfigurationChanged(this, true, false, false, false, false,
-		// false, false);
-		// }
-
-	}
-
-	public ColorGradientRange getColorGradientRange() {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-	public ColorGradientRange getColorGradientRange(
-			DataTypeMatrix dataTypeMatrix) {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
 	public ColorGradientTheme getColorTheme() {
 		return colorGradientTheme;
 	}
@@ -113,16 +80,6 @@ public class MondrianConfiguration {
 
 		this.colorGradientTheme = colorGradientTheme;
 		notifyConfigurationChanged(new ConfigurationChangedEvent(this, Type.COLOR_THEME_CHANGED));
-	}
-
-	public String getDataTypeMatrixType() {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-	public DataTypeMatrix getDataTypeMatrix() {
-		// TODO Auto-generated method stub
-		return null;
 	}
 
 	public void remapCyNetwork() {
@@ -216,7 +173,6 @@ public class MondrianConfiguration {
 		// creates a table to store mondrian table metadata
 		if (metaTable == null) {
 			metaTable = app.getTableFactory().createTable("Mondrian Table", CyIdentifiable.SUID, Long.class, false, false);
-			metaTable.setSavePolicy(SavePolicy.SESSION_FILE);
 			metaTable.createColumn("study_id", String.class, false);
 			metaTable.createColumn("study_name", String.class, false);
 			metaTable.createColumn("study_description", String.class, false);
@@ -433,10 +389,6 @@ public class MondrianConfiguration {
 		return null;
 	}
 
-	public CELL_DISPLAY getHeatmapCellDisplay() {
-		return heatmapWidgetCellDisplay;
-	}
-	
 	/*
 	private void notifyConfigurationChanged(MondrianConfiguration source,
 			boolean rangeChanged, boolean networkChanged,
