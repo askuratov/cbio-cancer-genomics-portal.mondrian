@@ -45,6 +45,7 @@ import org.mskcc.mondrian.internal.configuration.MondrianConfiguration;
 import org.mskcc.mondrian.internal.configuration.MondrianConfigurationListener;
 import org.mskcc.mondrian.internal.configuration.MondrianCyTable;
 import org.mskcc.mondrian.internal.gui.heatmap.HeatmapPanelConfiguration.PROPERTY_TYPE;
+import java.awt.BorderLayout;
 
 @SuppressWarnings("serial")
 public class HeatmapPanel extends JPanel implements MondrianConfigurationListener, 
@@ -60,10 +61,10 @@ CytoPanelComponent, ActionListener {
 	 * Create the panel.
 	 */
 	public HeatmapPanel() {
-		setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
+		setLayout(new BorderLayout(0, 0));
 		
 		JPanel headerPane = new JPanel();
-		add(headerPane);
+		add(headerPane, BorderLayout.NORTH);
 		headerPane.setLayout(new BoxLayout(headerPane, BoxLayout.X_AXIS));
 		
 		constantPropertyTypeComboBox = new JComboBox(){
@@ -121,46 +122,27 @@ CytoPanelComponent, ActionListener {
 		JButton configHeatmapButton = new JButton("Configure Heatmap");
 		headerPane.add(configHeatmapButton);
 		
-		JPanel columnPane = new JPanel();
-		add(columnPane);
-		columnPane.setLayout(new BoxLayout(columnPane, BoxLayout.X_AXIS));
-		
-		JButton columnBeginButton = new JButton("|<");
-		columnPane.add(columnBeginButton);
-		
-		JButton columnLeftButton = new JButton("<");
-		columnPane.add(columnLeftButton);
-		
-		Component horizontalGlue_1 = Box.createHorizontalGlue();
-		columnPane.add(horizontalGlue_1);
-		
-		JButton columnRightButton = new JButton(">");
-		columnPane.add(columnRightButton);
-		
-		JButton columnEndButton = new JButton(">|");
-		columnPane.add(columnEndButton);
-		
 		scrollPane = new JScrollPane();
-		add(scrollPane);
+		add(scrollPane, BorderLayout.CENTER);
 		
 		JPanel rowPane = new JPanel();
-		add(rowPane);
+		add(rowPane, BorderLayout.SOUTH);
 		rowPane.setLayout(new BoxLayout(rowPane, BoxLayout.X_AXIS));
 		
-		JButton rowBeginButton = new JButton("First Row");
-		rowPane.add(rowBeginButton);
+		JButton columnBeginButton = new JButton("|<");
+		rowPane.add(columnBeginButton);
 		
-		JButton rowPreviousButton = new JButton("Previous Row");
-		rowPane.add(rowPreviousButton);
+		JButton columnLeftButton = new JButton("<");
+		rowPane.add(columnLeftButton);
 		
 		Component horizontalGlue_2 = Box.createHorizontalGlue();
 		rowPane.add(horizontalGlue_2);
 		
-		JButton rowNextButton = new JButton("Next Row");
-		rowPane.add(rowNextButton);
+		JButton columnRightButton = new JButton(">");
+		rowPane.add(columnRightButton);
 		
-		JButton rowEndButton = new JButton("Last Row");
-		rowPane.add(rowEndButton);
+		JButton columnEndButton = new JButton(">|");
+		rowPane.add(columnEndButton);
 	}
 	
 	public void updatePanelData(List<MondrianCyTable> tables) {
