@@ -19,7 +19,6 @@ import org.cytoscape.view.vizmap.mappings.BoundaryRangeValues;
 import org.cytoscape.view.vizmap.mappings.ContinuousMapping;
 import org.mskcc.mondrian.internal.MondrianApp;
 import org.mskcc.mondrian.internal.configuration.MondrianConfiguration;
-import org.mskcc.mondrian.internal.gui.heatmap.HeatmapPanelConfiguration.CELL_DISPLAY;
 
 @SuppressWarnings("serial")
 public class HeatmapTableCellRenderer extends JLabel implements javax.swing.table.TableCellRenderer {
@@ -37,11 +36,11 @@ public class HeatmapTableCellRenderer extends JLabel implements javax.swing.tabl
 	private Color paint;
 	private ColorGradientTheme colorTheme;
 	private CELL_DISPLAY heatmapMode = CELL_DISPLAY.SINGLE;		
+	private String label;
 
 	/**
 	 * Constructor.
 	 *
-	 * @param mondrianConfiguration MondrianConfiguration
 	 * @param isBordered boolean
 	 */
 	public HeatmapTableCellRenderer(boolean isBordered) {
@@ -66,7 +65,6 @@ public class HeatmapTableCellRenderer extends JLabel implements javax.swing.tabl
 	public Component getTableCellRendererComponent(JTable table, Object object,
 												   boolean isSelected, boolean hasFocus,
 												   int row, int column) {
-
 		if (object instanceof String) {
 			String str = object.toString();
 			javax.swing.table.DefaultTableCellRenderer renderer = new javax.swing.table.DefaultTableCellRenderer();
@@ -78,16 +76,21 @@ public class HeatmapTableCellRenderer extends JLabel implements javax.swing.tabl
 
 		// get range of values
 		// 
-		VisualMappingFunctionFactory vmfFactory = MondrianApp.getInstance().getContinuousVmfFactory();
-		
 		HeatmapTableModel model = (HeatmapTableModel)table.getModel();
-		String colName = model.getColumnName(column);
-		ContinuousMapping<Double, Paint> cMapping = (ContinuousMapping<Double, Paint>)vmfFactory.createVisualMappingFunction(colName, Double.class, BasicVisualLexicon.NODE_FILL_COLOR);
-		ColorGradientTheme colorTheme = MondrianApp.getInstance().getMondrianConfiguration().getColorTheme();
-		cMapping.addPoint(model.getMin(), new BoundaryRangeValues<Paint>(colorTheme.getMinColor(), colorTheme.getMinColor(), colorTheme.getMinColor()));
-		cMapping.addPoint(model.getMean(), new BoundaryRangeValues<Paint>(colorTheme.getCenterColor(), colorTheme.getCenterColor(), colorTheme.getCenterColor()));
-		cMapping.addPoint(model.getMax(), new BoundaryRangeValues<Paint>(colorTheme.getMaxColor(), colorTheme.getMaxColor(), colorTheme.getMaxColor()));
-		this.paint = (Color)cMapping.getMappedValue(model.getCyRow(row, column));
+		this.setText(String.valueOf(object));
+		if (object.equals(Double.NaN)) {
+			this.paint = Color.LIGHT_GRAY;
+		} else {
+			VisualMappingFunctionFactory vmfFactory = MondrianApp.getInstance().getContinuousVmfFactory();
+			
+			String colName = model.getColumnName(column);
+			ContinuousMapping<Double, Paint> cMapping = (ContinuousMapping<Double, Paint>)vmfFactory.createVisualMappingFunction(colName, Double.class, BasicVisualLexicon.NODE_FILL_COLOR);
+			ColorGradientTheme colorTheme = MondrianApp.getInstance().getMondrianConfiguration().getColorTheme();
+			cMapping.addPoint(model.getMin(), new BoundaryRangeValues<Paint>(colorTheme.getMinColor(), colorTheme.getMinColor(), colorTheme.getMinColor()));
+			cMapping.addPoint(model.getMean(), new BoundaryRangeValues<Paint>(colorTheme.getCenterColor(), colorTheme.getCenterColor(), colorTheme.getCenterColor()));
+			cMapping.addPoint(model.getMax(), new BoundaryRangeValues<Paint>(colorTheme.getMaxColor(), colorTheme.getMaxColor(), colorTheme.getMaxColor()));
+			this.paint = (Color)cMapping.getMappedValue(model.getCyRow(row, column));
+		}
 
 		// swap/set borders
 		if (isBordered) {
@@ -135,10 +138,14 @@ public class HeatmapTableCellRenderer extends JLabel implements javax.swing.tabl
 		
 		Graphics2D g2d = (Graphics2D)g;
 		g2d.setStroke(stroke);
+		int width = this.getWidth();
+		int height = this.getHeight();
 		switch (heatmapMode) {
 		    case SINGLE:
 		    	g2d.setPaint(this.paint);
 			    g2d.fillRect(0, 0, getWidth(), getHeight());
+			    g.setColor(Color.black);
+			    g.drawString(this.getText(), 10, 10);
 			    break;
 			case TRIANGLES:
 				g2d.setRenderingHint(java.awt.RenderingHints.KEY_ANTIALIASING, java.awt.RenderingHints.VALUE_ANTIALIAS_ON);
@@ -434,6 +441,31 @@ public class HeatmapTableCellRenderer extends JLabel implements javax.swing.tabl
 		// outta here
 		return toReturn;
 	}
+	
+
+	/**
+	 * Cell Display Enumeration.
+	 */
+	public static enum CELL_DISPLAY {
+
+		// data types
+		NUMERIC("Numeric"), SINGLE("Single"), TRIANGLES("Triangles");
+		// HEATSTRIP("Heat Strips"),
+		// TILES("Tiles");
+
+		// string ref for readable name
+		private String type;
+
+		// constructor
+		CELL_DISPLAY(String type) {
+			this.type = type;
+		}
+
+		// method to get enum readable name
+		public String toString() {
+			return type;
+		}
+	}	
 }	
 
 

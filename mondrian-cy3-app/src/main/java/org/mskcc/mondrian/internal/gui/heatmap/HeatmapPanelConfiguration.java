@@ -26,30 +26,6 @@ public class HeatmapPanelConfiguration {
 		}
 	}
 
-	/**
-	 * Cell Display Enumeration.
-	 */
-	public static enum CELL_DISPLAY {
-
-		// data types
-		NUMERIC("Numeric"), SINGLE("Single"), TRIANGLES("Triangles");
-		// HEATSTRIP("Heat Strips"),
-		// TILES("Tiles");
-
-		// string ref for readable name
-		private String type;
-
-		// constructor
-		CELL_DISPLAY(String type) {
-			this.type = type;
-		}
-
-		// method to get enum readable name
-		public String toString() {
-			return type;
-		}
-	}
-
 	// the ref of the heatmap panel this configuration applies too
 	private HeatmapPanel heatmapPanel;
 	
