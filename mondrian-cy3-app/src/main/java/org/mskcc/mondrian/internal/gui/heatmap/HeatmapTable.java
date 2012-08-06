@@ -25,6 +25,7 @@ public class HeatmapTable implements ChangeListener, PropertyChangeListener {
 	private JTable fixed;
 	private JScrollPane scrollPane;
 	private HeatmapTableModel model;
+	private ColorGradientWidget legend;
 
 	/*
 	 * Specify the number of columns to be fixed and the scroll pane containing
@@ -73,7 +74,7 @@ public class HeatmapTable implements ChangeListener, PropertyChangeListener {
 		main.setDefaultRenderer(Double.class, new HeatmapTableCellRenderer(true));
 
 		// we are not focusable
-		main.setFocusable(false);
+		main.setFocusable(true);
 
 		// only allow single cell selection
 		main.setCellSelectionEnabled(true);

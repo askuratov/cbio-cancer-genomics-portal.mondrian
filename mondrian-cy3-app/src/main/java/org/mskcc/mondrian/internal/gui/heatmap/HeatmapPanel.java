@@ -44,6 +44,7 @@ import org.mskcc.mondrian.internal.configuration.ConfigurationChangedEvent.Type;
 import org.mskcc.mondrian.internal.configuration.MondrianConfiguration;
 import org.mskcc.mondrian.internal.configuration.MondrianConfigurationListener;
 import org.mskcc.mondrian.internal.configuration.MondrianCyTable;
+import org.mskcc.mondrian.internal.gui.heatmap.ColorGradientWidget.LEGEND_POSITION;
 import org.mskcc.mondrian.internal.gui.heatmap.HeatmapPanelConfiguration.PROPERTY_TYPE;
 import java.awt.BorderLayout;
 
@@ -56,7 +57,8 @@ CytoPanelComponent, ActionListener {
 	private JCheckBox hideGenesCheckBox;
 	private HeatmapPanelConfiguration configuration;
 	private JScrollPane scrollPane;
-
+	private ColorGradientWidget legend;	
+	
 	/**
 	 * Create the panel.
 	 */
@@ -110,8 +112,7 @@ CytoPanelComponent, ActionListener {
 		});
 		headerPane.add(constantPropertyComboBox);
 		
-		Component horizontalGlue = Box.createHorizontalGlue();
-		headerPane.add(horizontalGlue);
+		headerPane.add(Box.createHorizontalGlue());
 		
 		hideGenesCheckBox = new JCheckBox("Hide Genes without Data");
 		headerPane.add(hideGenesCheckBox);
@@ -125,24 +126,30 @@ CytoPanelComponent, ActionListener {
 		scrollPane = new JScrollPane();
 		add(scrollPane, BorderLayout.CENTER);
 		
-		JPanel rowPane = new JPanel();
-		add(rowPane, BorderLayout.SOUTH);
-		rowPane.setLayout(new BoxLayout(rowPane, BoxLayout.X_AXIS));
+		JPanel navPane = new JPanel();
+		add(navPane, BorderLayout.SOUTH);
+		navPane.setLayout(new BoxLayout(navPane, BoxLayout.X_AXIS));
 		
 		JButton columnBeginButton = new JButton("|<");
-		rowPane.add(columnBeginButton);
+		navPane.add(columnBeginButton);
 		
 		JButton columnLeftButton = new JButton("<");
-		rowPane.add(columnLeftButton);
+		navPane.add(columnLeftButton);
 		
-		Component horizontalGlue_2 = Box.createHorizontalGlue();
-		rowPane.add(horizontalGlue_2);
+		navPane.add(Box.createHorizontalGlue());
+		
+		ColorGradientRange range = new ColorGradientRange(0,0,0,0,0,0,0,0);
+		legend = new ColorGradientWidget("", 0, 35, 5, 5, 
+				ColorGradientTheme.BLUE_RED_GRADIENT_THEME, range, true, LEGEND_POSITION.BOTTOM);
+		navPane.add(legend);
+		
+		navPane.add(Box.createHorizontalGlue());
 		
 		JButton columnRightButton = new JButton(">");
-		rowPane.add(columnRightButton);
+		navPane.add(columnRightButton);
 		
 		JButton columnEndButton = new JButton(">|");
-		rowPane.add(columnEndButton);
+		navPane.add(columnEndButton);
 	}
 	
 	public void updatePanelData(List<MondrianCyTable> tables) {
@@ -169,6 +176,14 @@ CytoPanelComponent, ActionListener {
 	private void updateHeatmapTable() {
 		DialogTaskManager taskManager = MondrianApp.getInstance().getTaskManager();
 		taskManager.execute(new TaskIterator(new UpdateHeatmapTableTask()));		
+	}
+
+	public ColorGradientWidget getLegend() {
+		return legend;
+	}
+
+	public void setLegend(ColorGradientWidget legend) {
+		this.legend = legend;
 	}
 
 	@SuppressWarnings("unchecked")
@@ -279,21 +294,28 @@ CytoPanelComponent, ActionListener {
 				Long suid = map.get(gene);
 				model = new MondrianHeatmapTableModel(tables, propertyType, suid);
 				heatmapTable = new HeatmapTable(scrollPane, model);
-				revalidate();
 				break;
 			case DATA_TYPE:
 				GeneticProfile profile = (GeneticProfile)constantPropertyComboBox.getSelectedItem();
 				model = new MondrianHeatmapTableModel(tables, propertyType, profile);
 				heatmapTable = new HeatmapTable(scrollPane, model);
-				revalidate();
 				break;
 			case SAMPLE:
 				String sample = (String)constantPropertyComboBox.getSelectedItem();
 				model = new MondrianHeatmapTableModel(tables, propertyType, sample);
 				heatmapTable = new HeatmapTable(scrollPane, model);
-				revalidate();
 				break;
 			}
+			// Update color gradiant legend
+			double min = model.getMin();
+			double max = model.getMax();
+			double mean = model.getMean();
+			ColorGradientRange range = new ColorGradientRange(min, mean, mean, max, min, mean, mean, max);
+			
+			legend.reset("", 0, 35, MondrianApp.getInstance().getMondrianConfiguration().getColorTheme(), range);
+			legend.repaint();
+			legend.validate();
+			revalidate();
 		}
 		
 	}
