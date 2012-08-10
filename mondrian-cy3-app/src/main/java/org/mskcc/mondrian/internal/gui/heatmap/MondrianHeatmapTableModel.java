@@ -1,6 +1,9 @@
 package org.mskcc.mondrian.internal.gui.heatmap;
 
+import java.awt.Color;
+import java.awt.Paint;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -9,6 +12,12 @@ import org.cytoscape.model.CyIdentifiable;
 import org.cytoscape.model.CyNetwork;
 import org.cytoscape.model.CyRow;
 import org.cytoscape.model.CyTable;
+import org.cytoscape.view.presentation.property.BasicVisualLexicon;
+import org.cytoscape.view.vizmap.VisualMappingFunctionFactory;
+import org.cytoscape.view.vizmap.mappings.BoundaryRangeValues;
+import org.cytoscape.view.vizmap.mappings.ContinuousMapping;
+import org.cytoscape.view.vizmap.mappings.DiscreteMapping;
+import org.cytoscape.view.vizmap.mappings.PassthroughMapping;
 import org.mskcc.mondrian.client.GeneticProfile;
 import org.mskcc.mondrian.internal.MondrianApp;
 import org.mskcc.mondrian.internal.configuration.MondrianConfiguration;
@@ -272,5 +281,57 @@ public class MondrianHeatmapTableModel extends HeatmapTableModel {
 		this.max = max;
 		this.min = min;
 		this.mean = n == 0 ? 0.0 : total/n;		
+	}
+
+	@Override
+	public ContinuousMapping<Double, Paint> getContinuousMapping(int col) {
+		VisualMappingFunctionFactory vmfFactory = MondrianApp.getInstance().getContinuousVmfFactory();
+		
+		String colName = this.getColumnName(col);
+		ContinuousMapping<Double, Paint> cMapping = (ContinuousMapping<Double, Paint>)vmfFactory.createVisualMappingFunction(colName, Double.class, BasicVisualLexicon.NODE_FILL_COLOR);
+		ColorGradientTheme colorTheme = MondrianApp.getInstance().getMondrianConfiguration().getColorTheme();
+		cMapping.addPoint(this.getMin(), new BoundaryRangeValues<Paint>(colorTheme.getMinColor(), colorTheme.getMinColor(), colorTheme.getMinColor()));
+		cMapping.addPoint(this.getMean(), new BoundaryRangeValues<Paint>(colorTheme.getCenterColor(), colorTheme.getCenterColor(), colorTheme.getCenterColor()));
+		cMapping.addPoint(this.getMax(), new BoundaryRangeValues<Paint>(colorTheme.getMaxColor(), colorTheme.getMaxColor(), colorTheme.getMaxColor()));
+		return cMapping;
+	}
+
+	@Override
+	public PassthroughMapping<Long, Paint> getPassthroughMapping(int col) {
+		ContinuousMapping<Double, Paint> cMapping = getContinuousMapping(col);
+		VisualMappingFunctionFactory vmfFactory = MondrianApp.getInstance().getPassthroughVmfFactory();
+		PassthroughMapping<Long, Paint> pMapping = (PassthroughMapping<Long, Paint>)vmfFactory.createVisualMappingFunction("SUID", Long.class, BasicVisualLexicon.NODE_FILL_COLOR);
+		
+		
+		return null;
 	}	
+	
+	@Override
+	public DiscreteMapping<Long, Paint> getDiscreteMapping(int col) {
+		VisualMappingFunctionFactory vmfFactory = MondrianApp.getInstance().getDiscreteVmfFactory();
+		DiscreteMapping<Long, Paint> dMapping = (DiscreteMapping<Long, Paint>)vmfFactory.createVisualMappingFunction("SUID", Long.class, BasicVisualLexicon.NODE_FILL_COLOR);
+		ContinuousMapping<Double, Paint> cMapping = getContinuousMapping(col);
+		// put a mapping of node id's and paint in the mapping
+		Map<Long, Paint> map = new HashMap<Long, Paint>();
+		switch(propertyType) {
+		case GENE:
+			break;
+		case DATA_TYPE: 
+		case SAMPLE:
+			CyTable cyTable = tables.get(0).getTable();
+			String columnName = getColumnName(col);
+			List<Long> idList = cyTable.getColumn(CyIdentifiable.SUID).getValues(Long.class);
+			for (int i = 0; i < idList.size(); i++) {
+				CyRow row = getCyRow(i, col);
+				if (row.get(columnName, Double.class).isNaN()) {
+					map.put(idList.get(i), Color.LIGHT_GRAY);
+				} else {
+					map.put(idList.get(i), cMapping.getMappedValue(getCyRow(i, col)));
+				}
+			}
+			break;
+		}
+		dMapping.putAll(map);
+		return dMapping;
+	}
 }

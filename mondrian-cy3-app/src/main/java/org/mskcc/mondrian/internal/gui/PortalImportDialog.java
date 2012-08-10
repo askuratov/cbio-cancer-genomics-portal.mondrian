@@ -49,6 +49,7 @@ import org.mskcc.mondrian.internal.MondrianApp;
 import org.mskcc.mondrian.internal.configuration.ConfigurationChangedEvent.Type;
 import org.mskcc.mondrian.internal.configuration.MondrianCyTable;
 import org.slf4j.Logger;
+import javax.swing.JTextField;
 
 public class PortalImportDialog extends JDialog {
 
@@ -77,6 +78,7 @@ public class PortalImportDialog extends JDialog {
 	
 	private static PortalImportDialog instance;
 	private JComboBox geneSymbolComboBox;
+	private JTextField textField;
 	
 	public static PortalImportDialog getInstance() {
 		if (instance == null) {
@@ -92,7 +94,7 @@ public class PortalImportDialog extends JDialog {
 	private PortalImportDialog() {
 		
 		setTitle("Load Data From cBio Portal");
-		setBounds(100, 100, 450, 300);
+		setBounds(100, 100, 650, 500);
 		BorderLayout borderLayout = new BorderLayout();
 		borderLayout.setVgap(2);
 		borderLayout.setHgap(2);
@@ -149,7 +151,7 @@ public class PortalImportDialog extends JDialog {
 			{
 				JPanel panel_1 = new JPanel();
 				contentPanel.add(panel_1, BorderLayout.SOUTH);
-				panel_1.setLayout(new GridLayout(4, 1, 0, 0));
+				panel_1.setLayout(new GridLayout(6, 1, 0, 0));
 				{
 					JLabel lblNewLabel_1 = new JLabel("Select Patient/Case Set");
 					panel_1.add(lblNewLabel_1);
@@ -223,6 +225,15 @@ public class PortalImportDialog extends JDialog {
 							return this;
 						}		
 					});					
+				}
+				{
+					JLabel lblNewLabel_3 = new JLabel("Name of Imported Data");
+					panel_1.add(lblNewLabel_3);
+				}
+				{
+					textField = new JTextField();
+					panel_1.add(textField);
+					textField.setColumns(10);
 				}
 			}
 			cancerStudyComboBox.addActionListener(new ActionListener() {

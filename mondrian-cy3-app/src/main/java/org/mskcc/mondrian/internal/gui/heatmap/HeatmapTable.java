@@ -154,15 +154,12 @@ public class HeatmapTable implements ChangeListener, PropertyChangeListener {
 		return toReturn;
 	}
 	
-	//**************************************************************************
-	// HeatmapWidgetCellRenderer definition
+	public JTable getMain() {
+		return main;
+	}
 
-	/**
-	 * Inner class responsible for rendering heatmap widget cells.
-	 * (class based of "How to Use Tables tutorial".
-	 */
-	public Object getRowHeader(int row) {
-		return null;
+	public void setMain(JTable main) {
+		this.main = main;
 	}
 	
 	@SuppressWarnings("serial")

@@ -81,14 +81,7 @@ public class HeatmapTableCellRenderer extends JLabel implements javax.swing.tabl
 		if (object.equals(Double.NaN)) {
 			this.paint = Color.LIGHT_GRAY;
 		} else {
-			VisualMappingFunctionFactory vmfFactory = MondrianApp.getInstance().getContinuousVmfFactory();
-			
-			String colName = model.getColumnName(column);
-			ContinuousMapping<Double, Paint> cMapping = (ContinuousMapping<Double, Paint>)vmfFactory.createVisualMappingFunction(colName, Double.class, BasicVisualLexicon.NODE_FILL_COLOR);
-			ColorGradientTheme colorTheme = MondrianApp.getInstance().getMondrianConfiguration().getColorTheme();
-			cMapping.addPoint(model.getMin(), new BoundaryRangeValues<Paint>(colorTheme.getMinColor(), colorTheme.getMinColor(), colorTheme.getMinColor()));
-			cMapping.addPoint(model.getMean(), new BoundaryRangeValues<Paint>(colorTheme.getCenterColor(), colorTheme.getCenterColor(), colorTheme.getCenterColor()));
-			cMapping.addPoint(model.getMax(), new BoundaryRangeValues<Paint>(colorTheme.getMaxColor(), colorTheme.getMaxColor(), colorTheme.getMaxColor()));
+			ContinuousMapping<Double, Paint> cMapping = model.getContinuousMapping(column);
 			this.paint = (Color)cMapping.getMappedValue(model.getCyRow(row, column));
 		}
 

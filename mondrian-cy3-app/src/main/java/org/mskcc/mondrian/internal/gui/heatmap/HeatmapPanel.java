@@ -1,7 +1,10 @@
 package org.mskcc.mondrian.internal.gui.heatmap;
 
+import java.awt.BorderLayout;
+import java.awt.Color;
 import java.awt.Component;
 import java.awt.Dimension;
+import java.awt.Paint;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.net.URL;
@@ -21,17 +24,20 @@ import javax.swing.JComboBox;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTable;
+import javax.swing.event.ListSelectionEvent;
+import javax.swing.event.ListSelectionListener;
 
+import org.cytoscape.application.events.SetCurrentNetworkViewEvent;
+import org.cytoscape.application.events.SetCurrentNetworkViewListener;
 import org.cytoscape.application.swing.CytoPanelComponent;
 import org.cytoscape.application.swing.CytoPanelName;
 import org.cytoscape.model.CyNetwork;
-import org.cytoscape.model.CyTable;
-import org.cytoscape.model.events.RowsSetEvent;
-import org.cytoscape.model.events.RowsSetListener;
-import org.cytoscape.model.events.TableAddedEvent;
-import org.cytoscape.model.events.TableAddedListener;
-import org.cytoscape.model.events.TableDeletedEvent;
-import org.cytoscape.model.events.TableDeletedListener;
+import org.cytoscape.model.CyNode;
+import org.cytoscape.view.model.CyNetworkView;
+import org.cytoscape.view.model.View;
+import org.cytoscape.view.presentation.property.BasicVisualLexicon;
+import org.cytoscape.view.vizmap.VisualStyle;
+import org.cytoscape.view.vizmap.mappings.DiscreteMapping;
 import org.cytoscape.work.AbstractTask;
 import org.cytoscape.work.TaskIterator;
 import org.cytoscape.work.TaskMonitor;
@@ -46,11 +52,10 @@ import org.mskcc.mondrian.internal.configuration.MondrianConfigurationListener;
 import org.mskcc.mondrian.internal.configuration.MondrianCyTable;
 import org.mskcc.mondrian.internal.gui.heatmap.ColorGradientWidget.LEGEND_POSITION;
 import org.mskcc.mondrian.internal.gui.heatmap.HeatmapPanelConfiguration.PROPERTY_TYPE;
-import java.awt.BorderLayout;
 
 @SuppressWarnings("serial")
 public class HeatmapPanel extends JPanel implements MondrianConfigurationListener, 
-CytoPanelComponent, ActionListener {
+CytoPanelComponent, ActionListener, SetCurrentNetworkViewListener, ListSelectionListener {
 	
 	private JComboBox constantPropertyTypeComboBox;
 	private JComboBox constantPropertyComboBox;
@@ -58,6 +63,7 @@ CytoPanelComponent, ActionListener {
 	private HeatmapPanelConfiguration configuration;
 	private JScrollPane scrollPane;
 	private ColorGradientWidget legend;	
+	private HeatmapTable table;
 	
 	/**
 	 * Create the panel.
@@ -81,10 +87,12 @@ CytoPanelComponent, ActionListener {
             }
 
         };
+        
+        final HeatmapPanel panel = this;
 		constantPropertyTypeComboBox.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				DialogTaskManager taskManager = MondrianApp.getInstance().getTaskManager();
-				taskManager.execute(new TaskIterator(new UpdateConstantTypeTask()));					
+				taskManager.execute(new TaskIterator(new UpdateConstantTypeTask(panel)));					
 			}
 		});;
 		constantPropertyTypeComboBox.setAlignmentX(Component.LEFT_ALIGNMENT);
@@ -107,7 +115,7 @@ CytoPanelComponent, ActionListener {
 			@Override
 			public void actionPerformed(ActionEvent e) {
 				DialogTaskManager taskManager = MondrianApp.getInstance().getTaskManager();
-				taskManager.execute(new TaskIterator(new UpdateHeatmapTableTask()));	
+				taskManager.execute(new TaskIterator(new UpdateHeatmapTableTask(panel)));	
 			}
 		});
 		headerPane.add(constantPropertyComboBox);
@@ -131,9 +139,27 @@ CytoPanelComponent, ActionListener {
 		navPane.setLayout(new BoxLayout(navPane, BoxLayout.X_AXIS));
 		
 		JButton columnBeginButton = new JButton("|<");
+		columnBeginButton.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				if (table == null) return;
+				JTable main = table.getMain();
+				if (main.getSelectedColumn() < 0)
+					main.changeSelection(0,  0, false, false);
+				else
+					main.changeSelection(main.getSelectedRow(), 0, false, false);
+			}
+		});
 		navPane.add(columnBeginButton);
 		
 		JButton columnLeftButton = new JButton("<");
+		columnLeftButton.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				if (table == null) return;
+				JTable main = table.getMain();
+				if (main.getSelectedColumn() < 0 || main.getSelectedColumn() == 0) return;
+				main.changeSelection(main.getSelectedRow(), main.getSelectedColumn()-1, false, false);				
+			}
+		});
 		navPane.add(columnLeftButton);
 		
 		navPane.add(Box.createHorizontalGlue());
@@ -146,15 +172,34 @@ CytoPanelComponent, ActionListener {
 		navPane.add(Box.createHorizontalGlue());
 		
 		JButton columnRightButton = new JButton(">");
+		columnRightButton.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				if (table == null) return;
+				JTable main = table.getMain();
+				if (main.getSelectedColumn() < 0 || main.getSelectedColumn() == main.getColumnCount()) return;
+				main.changeSelection(main.getSelectedRow(), main.getSelectedColumn()+1, false, false);						
+			}
+		});
 		navPane.add(columnRightButton);
 		
 		JButton columnEndButton = new JButton(">|");
+		columnEndButton.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				if (table == null) return;
+				JTable main = table.getMain();
+				if (main.getSelectedColumn() < 0) 
+					main.changeSelection(0, main.getColumnCount(), false, false);
+				else
+					main.changeSelection(main.getSelectedRow(), main.getColumnCount()-1, false, false);
+			}
+		});
 		navPane.add(columnEndButton);
 	}
 	
 	public void updatePanelData(List<MondrianCyTable> tables) {
 		if (tables.size() == 0) {
-			// TODO: do nothing?
+			System.out.println("Tables has 0 size");
+			// TODO: clear panel
 		}
 		
 		// update constant property combobox
@@ -169,13 +214,8 @@ CytoPanelComponent, ActionListener {
 			constantPropertyComboBox.setModel(new DefaultComboBoxModel(caseList.getCases()));
 		}
 		constantPropertyComboBox.setSelectedIndex(0);
-		updateHeatmapTable();
-		this.validate();
-	}
-
-	private void updateHeatmapTable() {
 		DialogTaskManager taskManager = MondrianApp.getInstance().getTaskManager();
-		taskManager.execute(new TaskIterator(new UpdateHeatmapTableTask()));		
+		taskManager.execute(new TaskIterator(new UpdateHeatmapTableTask(this)));	
 	}
 
 	public ColorGradientWidget getLegend() {
@@ -238,7 +278,7 @@ CytoPanelComponent, ActionListener {
 	public void setConstantPropertyType(PROPERTY_TYPE propertyType) {
 		this.constantPropertyTypeComboBox.setSelectedItem(propertyType);
 		DialogTaskManager taskManager = MondrianApp.getInstance().getTaskManager();
-		taskManager.execute(new TaskIterator(new UpdateConstantTypeTask()));			
+		taskManager.execute(new TaskIterator(new UpdateConstantTypeTask(this)));			
 	}
 	
 	public HeatmapPanelConfiguration getConfiguration() {
@@ -250,7 +290,11 @@ CytoPanelComponent, ActionListener {
 	}
 
 	class UpdateConstantTypeTask extends AbstractTask {
-
+		private HeatmapPanel panel;
+		
+		UpdateConstantTypeTask(HeatmapPanel panel) {
+			this.panel = panel;
+		}		
 		@Override
 		public void run(TaskMonitor arg0) throws Exception {
 			MondrianApp app = MondrianApp.getInstance();
@@ -273,39 +317,51 @@ CytoPanelComponent, ActionListener {
 				constantPropertyComboBox.setModel(new DefaultComboBoxModel(caseList.getCases()));
 				break;
 			}
-			insertTasksAfterCurrentTask(new UpdateHeatmapTableTask());
+			insertTasksAfterCurrentTask(new UpdateHeatmapTableTask(panel));
 		}
 		
 	}
 	
 	class UpdateHeatmapTableTask extends AbstractTask {
+		private HeatmapPanel panel;
+		
+		UpdateHeatmapTableTask(HeatmapPanel panel) {
+			this.panel = panel;
+		}
 		@Override
 		public void run(TaskMonitor arg0) throws Exception {
 			PROPERTY_TYPE propertyType = (PROPERTY_TYPE)constantPropertyTypeComboBox.getSelectedItem();
 			MondrianConfiguration config = MondrianApp.getInstance().getMondrianConfiguration();
 			CyNetwork network = MondrianApp.getInstance().getAppManager().getCurrentNetwork();
 			List<MondrianCyTable> tables = config.getCurrentMondrianTables(network);
+/*
+			if (tables.size() == 0) {
+				
+				return;
+			}
+			*/
 			HeatmapTableModel model = null;
-			HeatmapTable heatmapTable = null;
 			switch(propertyType) {
 			case GENE:
 				String gene = (String)constantPropertyComboBox.getSelectedItem();
 				Map<String, Long> map = config.getGeneNodeMap(network.getSUID());
 				Long suid = map.get(gene);
 				model = new MondrianHeatmapTableModel(tables, propertyType, suid);
-				heatmapTable = new HeatmapTable(scrollPane, model);
+				table = new HeatmapTable(scrollPane, model);
 				break;
 			case DATA_TYPE:
 				GeneticProfile profile = (GeneticProfile)constantPropertyComboBox.getSelectedItem();
 				model = new MondrianHeatmapTableModel(tables, propertyType, profile);
-				heatmapTable = new HeatmapTable(scrollPane, model);
+				table = new HeatmapTable(scrollPane, model);
 				break;
 			case SAMPLE:
 				String sample = (String)constantPropertyComboBox.getSelectedItem();
 				model = new MondrianHeatmapTableModel(tables, propertyType, sample);
-				heatmapTable = new HeatmapTable(scrollPane, model);
+				table = new HeatmapTable(scrollPane, model);
 				break;
 			}
+			table.getMain().getSelectionModel().addListSelectionListener(panel);
+			table.getMain().getColumnModel().getSelectionModel().addListSelectionListener(panel);
 			// Update color gradiant legend
 			double min = model.getMin();
 			double max = model.getMax();
@@ -319,6 +375,47 @@ CytoPanelComponent, ActionListener {
 		}
 		
 	}
+
+	@Override
+	public void handleEvent(SetCurrentNetworkViewEvent evt) {
+		/*
+		//System.out.println("Set Current Network View" + arg0);
+		CyNetwork network = evt.getNetworkView().getModel();
+		MondrianConfiguration config = MondrianApp.getInstance().getMondrianConfiguration();
+//		CyTable metaTable = MondrianConfiguration.getMondrianMetaTable(network);
+//		if (metaTable == null) return ;
+		List<MondrianCyTable> currentTables = config.getCurrentMondrianTables(network);
+		this.updatePanelData(currentTables);
+		*/		
+	}
 	
-	
+	@Override
+	public void valueChanged(ListSelectionEvent e) {
+		if (e.getValueIsAdjusting()) {return;} // the mouse button has not yet been released
+		PROPERTY_TYPE propertyType = (PROPERTY_TYPE)constantPropertyTypeComboBox.getSelectedItem();
+		if (propertyType == PROPERTY_TYPE.GENE) return;
+		
+		JTable main = table.getMain();
+		int col = main.getSelectedColumn();
+		if (col < 0) return;
+		int row = main.getSelectedRow();
+		
+		VisualStyle vs = MondrianApp.getInstance().getVisualMappingManager().getCurrentVisualStyle();
+		HeatmapTableModel model = (HeatmapTableModel)table.getMain().getModel();
+		DiscreteMapping<Long, Paint> mFunction = model.getDiscreteMapping(col);
+		if (mFunction == null) return;
+		vs.addVisualMappingFunction(mFunction);
+		CyNetworkView view = MondrianApp.getInstance().getAppManager().getCurrentNetworkView();
+		MondrianApp.getInstance().getVisualMappingManager().addVisualStyle(vs);
+		vs.apply(view);
+		view.updateView();
+		CyNetwork network = MondrianApp.getInstance().getAppManager().getCurrentNetwork();
+		MondrianConfiguration config = MondrianApp.getInstance().getMondrianConfiguration();
+		String rowName = model.getRowName(row);
+		Long nodeId = config.getGeneNodeMap(network).get(rowName);
+		CyNode node = network.getNode(nodeId);
+		View<CyNode> nView = view.getNodeView(node);
+		nView.setVisualProperty(BasicVisualLexicon.NODE_BORDER_PAINT, Color.orange);
+	}	
+
 }

@@ -19,12 +19,10 @@ import org.cytoscape.model.CyTable;
 import org.cytoscape.model.CyTableManager;
 import org.mskcc.mondrian.client.CancerStudy;
 import org.mskcc.mondrian.client.CaseList;
-import org.mskcc.mondrian.client.DataTypeMatrix;
 import org.mskcc.mondrian.client.GeneticProfile;
 import org.mskcc.mondrian.internal.MondrianApp;
 import org.mskcc.mondrian.internal.configuration.ConfigurationChangedEvent.Type;
 import org.mskcc.mondrian.internal.gui.heatmap.ColorGradientTheme;
-import org.mskcc.mondrian.internal.gui.heatmap.HeatmapPanelConfiguration.CELL_DISPLAY;
 
 /**
  * Maintains the current configuration for the plugin.
@@ -155,6 +153,10 @@ public class MondrianConfiguration {
 		return geneSymbolMap;
 	}
 	
+	public Map<String, Long> getGeneNodeMap(CyNetwork network) {
+		return getGeneNodeMap(network.getSUID());
+	}
+	
 	public String getTableNamespase(CancerStudy study, GeneticProfile profile, CaseList caseList) {
 		return study.getStudyId() + ":" + profile.getId() + ":" + caseList.getId();
 	}
@@ -186,6 +188,7 @@ public class MondrianConfiguration {
 			metaTable.createColumn("current", Boolean.class, false);
 			app.getTableManager().addTable(metaTable);
 			setMondrianMetaTable(network, metaTable);
+			//metaTable.setSavePolicy(SavePolicy.SESSION_FILE);
 		} else { // set all rows not current
 			List<CyRow> rows = metaTable.getAllRows();
 			for (CyRow row: rows) {
@@ -230,6 +233,8 @@ public class MondrianConfiguration {
 		CyTable table = network.getDefaultNetworkTable();
 		CyRow row = table.getRow(network.getSUID());
 		if (table.getColumn("mondrian_table") == null) return null;
+		if (row.get("mondrian_table", Long.class) == null) return null;
+		System.out.println("mondrian_table" + row.get("mondrian_table", Long.class));
 		return MondrianApp.getInstance().getTableManager().getTable(row.get("mondrian_table", Long.class));
 	}
 	
@@ -243,6 +248,7 @@ public class MondrianConfiguration {
 		CyRow row = table.getRow(network.getSUID());
 		if (table.getColumn("mondrian_table") == null) table.createColumn("mondrian_table", Long.class, false);
 		row.set("mondrian_table", mondrianMetaTable.getSUID());
+		System.out.println("mondrian_table: " + mondrianMetaTable.getSUID());
 	}
 	
 	/**
@@ -254,6 +260,7 @@ public class MondrianConfiguration {
 	public List<MondrianCyTable> getCurrentMondrianTables(CyNetwork network) {
 		List<MondrianCyTable> tables = new ArrayList<MondrianCyTable>();
 		CyTable metaTable = getMondrianMetaTable(network);
+		System.out.println("metaTable: " + metaTable);
 		if (metaTable == null) return tables;
 		Collection<CyRow> rows = metaTable.getMatchingRows("current", true);
 		for (CyRow cyRow : rows) {

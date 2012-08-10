@@ -3,6 +3,8 @@ package org.mskcc.mondrian.internal;
 import java.util.Properties;
 
 import org.cytoscape.application.CyApplicationManager;
+import org.cytoscape.application.events.SetCurrentNetworkListener;
+import org.cytoscape.application.events.SetCurrentNetworkViewListener;
 import org.cytoscape.application.swing.CyAction;
 import org.cytoscape.application.swing.CySwingApplication;
 import org.cytoscape.application.swing.CytoPanelComponent;
@@ -28,30 +30,30 @@ public class CyActivator extends AbstractCyActivator {
 		CySwingApplication desktop = getService(bc, CySwingApplication.class);
 		CyNetworkManager networkManager = getService(bc, CyNetworkManager.class);
 		DialogTaskManager taskManager = getService(bc, DialogTaskManager.class);
-		CyApplicationManager manager = getService(bc,CyApplicationManager.class);
+		CyApplicationManager manager = getService(bc, CyApplicationManager.class);
 		CyTableFactory tableFactory = getService(bc, CyTableFactory.class);
 		CyTableManager tableManager = getService(bc, CyTableManager.class);
-		VisualMappingFunctionFactory continuousVmfFactory = getService(bc, VisualMappingFunctionFactory.class, "(mapping.type=continuous)");
-		VisualMappingFunctionFactory discreteVmfFactory = getService(bc, VisualMappingFunctionFactory.class, "(mapping.type=discrete)");
-		VisualMappingFunctionFactory passthroughVmfFactory = getService(bc, VisualMappingFunctionFactory.class, "(mapping.type=passthrough)");
+		VisualMappingFunctionFactory continuousVmfFactory = getService(bc, VisualMappingFunctionFactory.class,
+				"(mapping.type=continuous)");
+		VisualMappingFunctionFactory discreteVmfFactory = getService(bc, VisualMappingFunctionFactory.class,
+				"(mapping.type=discrete)");
+		VisualMappingFunctionFactory passthroughVmfFactory = getService(bc, VisualMappingFunctionFactory.class,
+				"(mapping.type=passthrough)");
 		VisualMappingManager visualMappingManager = getService(bc, VisualMappingManager.class);
-		VisualStyleFactory visualStyleFactory = getService(bc, VisualStyleFactory.class);		
-		CyNetworkTableManager networkTableManager = getService(bc,
-				CyNetworkTableManager.class);
+		VisualStyleFactory visualStyleFactory = getService(bc, VisualStyleFactory.class);
+		CyNetworkTableManager networkTableManager = getService(bc, CyNetworkTableManager.class);
 
 		// create our gui
-		MondrianApp container = MondrianApp.getInstance(desktop,
-				networkManager, taskManager, manager, tableFactory,
-				tableManager, networkTableManager, continuousVmfFactory, 
-				discreteVmfFactory, passthroughVmfFactory, visualMappingManager,
-				visualStyleFactory);
+		MondrianApp container = MondrianApp.getInstance(desktop, networkManager, taskManager, manager, tableFactory,
+				tableManager, networkTableManager, continuousVmfFactory, discreteVmfFactory, passthroughVmfFactory,
+				visualMappingManager, visualStyleFactory);
 
 		// TODO: populate the properties
-		registerService(bc, container.getDataTypesPane(),
-				CytoPanelComponent.class, new Properties());
-		registerService(bc, container.getControlPane(),
-				CytoPanelComponent.class, new Properties());
+		registerService(bc, container.getDataTypesPane(), CytoPanelComponent.class, new Properties());
+		registerService(bc, container.getControlPane(), CytoPanelComponent.class, new Properties());
 		registerService(bc, container, CyAction.class, new Properties());
+		registerService(bc, container.getHeatmapPane(), SetCurrentNetworkViewListener.class, new Properties());
+
 	}
 
 }
