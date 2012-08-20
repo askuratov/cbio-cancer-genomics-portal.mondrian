@@ -123,13 +123,13 @@ CytoPanelComponent, ActionListener, SetCurrentNetworkViewListener, ListSelection
 		headerPane.add(Box.createHorizontalGlue());
 		
 		hideGenesCheckBox = new JCheckBox("Hide Genes without Data");
-		headerPane.add(hideGenesCheckBox);
+		//headerPane.add(hideGenesCheckBox);
 		
 		JButton configGradientButton = new JButton("Configure Color Gradient");
-		headerPane.add(configGradientButton);
+		//headerPane.add(configGradientButton);
 		
 		JButton configHeatmapButton = new JButton("Configure Heatmap");
-		headerPane.add(configHeatmapButton);
+		//headerPane.add(configHeatmapButton);
 		
 		scrollPane = new JScrollPane();
 		add(scrollPane, BorderLayout.CENTER);

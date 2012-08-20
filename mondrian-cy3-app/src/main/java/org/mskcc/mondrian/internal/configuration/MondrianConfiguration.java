@@ -189,11 +189,21 @@ public class MondrianConfiguration {
 			app.getTableManager().addTable(metaTable);
 			setMondrianMetaTable(network, metaTable);
 			//metaTable.setSavePolicy(SavePolicy.SESSION_FILE);
-		} else { // set all rows not current
+		} else {
+			/*
+			// set all rows not current
 			List<CyRow> rows = metaTable.getAllRows();
 			for (CyRow row: rows) {
 				row.set("current", false);
 			}
+			*/
+			
+			//Remove all other tables
+			List<CyRow> rows = metaTable.getAllRows();
+			for (CyRow cyRow : rows) {
+				app.getTableManager().deleteTable(cyRow.get(CyIdentifiable.SUID, Long.class));
+			}
+			metaTable.deleteRows(metaTable.getPrimaryKey().getValues(Long.class));
 		}
 		
 		for (MondrianCyTable mondrianTable: mondrianTables) {

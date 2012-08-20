@@ -78,7 +78,6 @@ public class PortalImportDialog extends JDialog {
 	
 	private static PortalImportDialog instance;
 	private JComboBox geneSymbolComboBox;
-	private JTextField textField;
 	
 	public static PortalImportDialog getInstance() {
 		if (instance == null) {
@@ -151,7 +150,7 @@ public class PortalImportDialog extends JDialog {
 			{
 				JPanel panel_1 = new JPanel();
 				contentPanel.add(panel_1, BorderLayout.SOUTH);
-				panel_1.setLayout(new GridLayout(6, 1, 0, 0));
+				panel_1.setLayout(new GridLayout(4, 1, 0, 0));
 				{
 					JLabel lblNewLabel_1 = new JLabel("Select Patient/Case Set");
 					panel_1.add(lblNewLabel_1);
@@ -225,15 +224,6 @@ public class PortalImportDialog extends JDialog {
 							return this;
 						}		
 					});					
-				}
-				{
-					JLabel lblNewLabel_3 = new JLabel("Name of Imported Data");
-					panel_1.add(lblNewLabel_3);
-				}
-				{
-					textField = new JTextField();
-					panel_1.add(textField);
-					textField.setColumns(10);
 				}
 			}
 			cancerStudyComboBox.addActionListener(new ActionListener() {
@@ -341,10 +331,6 @@ public class PortalImportDialog extends JDialog {
 				CyTable table = MondrianApp.getInstance().getTableFactory().createTable(profile.getName(), CyIdentifiable.SUID, 
 						Long.class, true, true);
 				DataTypeMatrix matrix = portalClient.getProfileData(caseList, profile, genes);
-
-				// Create a few default columns
-				//table.createColumn("selected", Boolean.class, true);
-				//table.createColumn(geneSymbolField, String.class, false);
 				
 				List<String> dataColNames = matrix.getDataColNames();
 				for (String colName: dataColNames) {
