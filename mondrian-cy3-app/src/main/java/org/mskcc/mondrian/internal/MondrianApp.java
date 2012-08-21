@@ -1,8 +1,6 @@
 package org.mskcc.mondrian.internal;
 
 import java.awt.event.ActionEvent;
-import java.util.Collection;
-import java.util.List;
 
 import org.cytoscape.application.CyApplicationManager;
 import org.cytoscape.application.swing.AbstractCyAction;
@@ -10,24 +8,18 @@ import org.cytoscape.application.swing.CySwingApplication;
 import org.cytoscape.application.swing.CytoPanel;
 import org.cytoscape.application.swing.CytoPanelName;
 import org.cytoscape.application.swing.CytoPanelState;
-import org.cytoscape.model.CyColumn;
-import org.cytoscape.model.CyNetwork;
 import org.cytoscape.model.CyNetworkManager;
 import org.cytoscape.model.CyNetworkTableManager;
-import org.cytoscape.model.CyTable;
 import org.cytoscape.model.CyTableFactory;
 import org.cytoscape.model.CyTableManager;
-import org.cytoscape.model.SUIDFactory;
 import org.cytoscape.view.vizmap.VisualMappingFunctionFactory;
 import org.cytoscape.view.vizmap.VisualMappingManager;
 import org.cytoscape.view.vizmap.VisualStyleFactory;
 import org.cytoscape.work.swing.DialogTaskManager;
 import org.mskcc.mondrian.internal.configuration.ConfigurationChangedEvent;
 import org.mskcc.mondrian.internal.configuration.MondrianConfiguration;
-import org.mskcc.mondrian.internal.configuration.MondrianConfiguration;
 import org.mskcc.mondrian.internal.configuration.MondrianConfigurationListener;
 import org.mskcc.mondrian.internal.gui.DataTypesPanel;
-import org.mskcc.mondrian.internal.gui.MapControlPanel;
 import org.mskcc.mondrian.internal.gui.heatmap.HeatmapPanel;
 
 /**

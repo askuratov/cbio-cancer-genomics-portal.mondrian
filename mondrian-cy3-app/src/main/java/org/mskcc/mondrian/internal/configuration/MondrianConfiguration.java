@@ -162,6 +162,22 @@ public class MondrianConfiguration {
 	}
 	
 	/**
+	 * Unregister a mondrian tables of a network. Could be called before a network is destroyed. 
+	 * 
+	 * @param network
+	 */
+	public void unregisterMondrianTables(CyNetwork network) { 
+		MondrianApp app = MondrianApp.getInstance();
+		CyTable metaTable = getMondrianMetaTable(network);
+		List<CyRow> rows = metaTable.getAllRows();
+		for (CyRow cyRow : rows) {
+			app.getTableManager().deleteTable(cyRow.get(CyIdentifiable.SUID, Long.class));
+		}
+		//metaTable.deleteRows(metaTable.getPrimaryKey().getValues(Long.class));	
+		removeMondrianMetaTable(network);
+	}
+	
+	/**
 	 * Registers a mondrian table to a network
 	 * @param network
 	 * @param table
@@ -244,8 +260,20 @@ public class MondrianConfiguration {
 		CyRow row = table.getRow(network.getSUID());
 		if (table.getColumn("mondrian_table") == null) return null;
 		if (row.get("mondrian_table", Long.class) == null) return null;
-		System.out.println("mondrian_table" + row.get("mondrian_table", Long.class));
+		//System.out.println("mondrian_table" + row.get("mondrian_table", Long.class));
 		return MondrianApp.getInstance().getTableManager().getTable(row.get("mondrian_table", Long.class));
+	}
+	
+	public static boolean removeMondrianMetaTable(CyNetwork network) {
+		CyTable table = network.getDefaultNetworkTable();
+		CyRow row = table.getRow(network.getSUID());
+		if (table.getColumn("mondrian_table") == null) return true;
+		if (row.get("mondrian_table", Long.class) == null) return true;
+		//System.out.println("mondrian_table" + row.get("mondrian_table", Long.class));
+		//MondrianApp.getInstance().getTableManager().deleteTable(row.get("mondrian_table", Long.class));
+		//System.out.println("mondrian_table: delete: " + row.get("mondrian_table", Long.class));
+		row.set("mondrian_table", null);
+		return true;
 	}
 	
 	/**
@@ -258,7 +286,7 @@ public class MondrianConfiguration {
 		CyRow row = table.getRow(network.getSUID());
 		if (table.getColumn("mondrian_table") == null) table.createColumn("mondrian_table", Long.class, false);
 		row.set("mondrian_table", mondrianMetaTable.getSUID());
-		System.out.println("mondrian_table: " + mondrianMetaTable.getSUID());
+		//System.out.println("mondrian_table: " + mondrianMetaTable.getSUID());
 	}
 	
 	/**
@@ -270,7 +298,7 @@ public class MondrianConfiguration {
 	public List<MondrianCyTable> getCurrentMondrianTables(CyNetwork network) {
 		List<MondrianCyTable> tables = new ArrayList<MondrianCyTable>();
 		CyTable metaTable = getMondrianMetaTable(network);
-		System.out.println("metaTable: " + metaTable);
+		//System.out.println("metaTable: " + metaTable);
 		if (metaTable == null) return tables;
 		Collection<CyRow> rows = metaTable.getMatchingRows("current", true);
 		for (CyRow cyRow : rows) {

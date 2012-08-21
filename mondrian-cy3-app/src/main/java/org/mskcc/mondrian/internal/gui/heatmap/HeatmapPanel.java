@@ -33,6 +33,10 @@ import org.cytoscape.application.swing.CytoPanelComponent;
 import org.cytoscape.application.swing.CytoPanelName;
 import org.cytoscape.model.CyNetwork;
 import org.cytoscape.model.CyNode;
+import org.cytoscape.model.events.NetworkAboutToBeDestroyedEvent;
+import org.cytoscape.model.events.NetworkAboutToBeDestroyedListener;
+import org.cytoscape.model.events.NetworkDestroyedEvent;
+import org.cytoscape.model.events.NetworkDestroyedListener;
 import org.cytoscape.view.model.CyNetworkView;
 import org.cytoscape.view.model.View;
 import org.cytoscape.view.presentation.property.BasicVisualLexicon;
@@ -55,7 +59,7 @@ import org.mskcc.mondrian.internal.gui.heatmap.HeatmapPanelConfiguration.PROPERT
 
 @SuppressWarnings("serial")
 public class HeatmapPanel extends JPanel implements MondrianConfigurationListener, 
-CytoPanelComponent, ActionListener, SetCurrentNetworkViewListener, ListSelectionListener {
+CytoPanelComponent, ActionListener, SetCurrentNetworkViewListener, ListSelectionListener, NetworkAboutToBeDestroyedListener {
 	
 	private JComboBox constantPropertyTypeComboBox;
 	private JComboBox constantPropertyComboBox;
@@ -197,23 +201,24 @@ CytoPanelComponent, ActionListener, SetCurrentNetworkViewListener, ListSelection
 	}
 	
 	public void updatePanelData(List<MondrianCyTable> tables) {
-		if (tables.size() == 0) {
-			System.out.println("Tables has 0 size");
-			// TODO: clear panel
-		}
-		
-		// update constant property combobox
-		if (constantPropertyTypeComboBox.getSelectedItem() == PROPERTY_TYPE.DATA_TYPE) {
-			List<GeneticProfile> profiles = new ArrayList<GeneticProfile>();
-			for (MondrianCyTable table: tables) {
-				profiles.add(table.getProfile());
+		if (tables == null || tables.size() == 0) {
+			//System.out.println("Tables has 0 size");
+			// clean up panel
+			constantPropertyComboBox.removeAllItems();
+		} else {
+			// update constant property combobox
+			if (constantPropertyTypeComboBox.getSelectedItem() == PROPERTY_TYPE.DATA_TYPE) {
+				List<GeneticProfile> profiles = new ArrayList<GeneticProfile>();
+				for (MondrianCyTable table: tables) {
+					profiles.add(table.getProfile());
+				}
+				constantPropertyComboBox.setModel(new DefaultComboBoxModel(profiles.toArray()));
+			} else if (constantPropertyTypeComboBox.getSelectedItem() == PROPERTY_TYPE.SAMPLE) {
+				CaseList caseList = tables.get(0).getCaseList();
+				constantPropertyComboBox.setModel(new DefaultComboBoxModel(caseList.getCases()));
 			}
-			constantPropertyComboBox.setModel(new DefaultComboBoxModel(profiles.toArray()));
-		} else if (constantPropertyTypeComboBox.getSelectedItem() == PROPERTY_TYPE.SAMPLE) {
-			CaseList caseList = tables.get(0).getCaseList();
-			constantPropertyComboBox.setModel(new DefaultComboBoxModel(caseList.getCases()));
+			constantPropertyComboBox.setSelectedIndex(0);
 		}
-		constantPropertyComboBox.setSelectedIndex(0);
 		DialogTaskManager taskManager = MondrianApp.getInstance().getTaskManager();
 		taskManager.execute(new TaskIterator(new UpdateHeatmapTableTask(this)));	
 	}
@@ -334,12 +339,10 @@ CytoPanelComponent, ActionListener, SetCurrentNetworkViewListener, ListSelection
 			MondrianConfiguration config = MondrianApp.getInstance().getMondrianConfiguration();
 			CyNetwork network = MondrianApp.getInstance().getAppManager().getCurrentNetwork();
 			List<MondrianCyTable> tables = config.getCurrentMondrianTables(network);
-/*
 			if (tables.size() == 0) {
-				
+				table = new HeatmapTable(scrollPane, new EmptyHeatmapTableModel());
 				return;
 			}
-			*/
 			HeatmapTableModel model = null;
 			switch(propertyType) {
 			case GENE:
@@ -378,15 +381,6 @@ CytoPanelComponent, ActionListener, SetCurrentNetworkViewListener, ListSelection
 
 	@Override
 	public void handleEvent(SetCurrentNetworkViewEvent evt) {
-		/*
-		//System.out.println("Set Current Network View" + arg0);
-		CyNetwork network = evt.getNetworkView().getModel();
-		MondrianConfiguration config = MondrianApp.getInstance().getMondrianConfiguration();
-//		CyTable metaTable = MondrianConfiguration.getMondrianMetaTable(network);
-//		if (metaTable == null) return ;
-		List<MondrianCyTable> currentTables = config.getCurrentMondrianTables(network);
-		this.updatePanelData(currentTables);
-		*/		
 	}
 	
 	@Override
@@ -416,6 +410,17 @@ CytoPanelComponent, ActionListener, SetCurrentNetworkViewListener, ListSelection
 		CyNode node = network.getNode(nodeId);
 		View<CyNode> nView = view.getNodeView(node);
 		nView.setVisualProperty(BasicVisualLexicon.NODE_BORDER_PAINT, Color.orange);
+	}
+
+	@Override
+	public void handleEvent(NetworkAboutToBeDestroyedEvent e) {
+		CyNetwork network = e.getNetwork();
+		MondrianConfiguration config = MondrianApp.getInstance().getMondrianConfiguration();
+//		CyTable metaTable = MondrianConfiguration.getMondrianMetaTable(network);
+//		if (metaTable == null) return ;
+		config.unregisterMondrianTables(network);
+		List<MondrianCyTable> currentTables = config.getCurrentMondrianTables(network);
+		this.updatePanelData(currentTables);
 	}	
 
 }

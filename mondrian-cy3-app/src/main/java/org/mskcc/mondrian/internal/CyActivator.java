@@ -3,7 +3,6 @@ package org.mskcc.mondrian.internal;
 import java.util.Properties;
 
 import org.cytoscape.application.CyApplicationManager;
-import org.cytoscape.application.events.SetCurrentNetworkListener;
 import org.cytoscape.application.events.SetCurrentNetworkViewListener;
 import org.cytoscape.application.swing.CyAction;
 import org.cytoscape.application.swing.CySwingApplication;
@@ -12,6 +11,7 @@ import org.cytoscape.model.CyNetworkManager;
 import org.cytoscape.model.CyNetworkTableManager;
 import org.cytoscape.model.CyTableFactory;
 import org.cytoscape.model.CyTableManager;
+import org.cytoscape.model.events.NetworkAboutToBeDestroyedListener;
 import org.cytoscape.service.util.AbstractCyActivator;
 import org.cytoscape.view.vizmap.VisualMappingFunctionFactory;
 import org.cytoscape.view.vizmap.VisualMappingManager;
@@ -53,7 +53,7 @@ public class CyActivator extends AbstractCyActivator {
 		registerService(bc, container.getControlPane(), CytoPanelComponent.class, new Properties());
 		registerService(bc, container, CyAction.class, new Properties());
 		registerService(bc, container.getHeatmapPane(), SetCurrentNetworkViewListener.class, new Properties());
-
+		registerService(bc, container.getHeatmapPane(), NetworkAboutToBeDestroyedListener.class, new Properties());
 	}
 
 }
