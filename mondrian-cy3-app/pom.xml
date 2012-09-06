@@ -139,7 +139,7 @@
         <dependency>
         	<groupId>org.cytoscape</groupId>
         	<artifactId>property-api</artifactId>
-        	<version>3.0.0-beta2-SNAPSHOT</version>
+        	<version>3.0.0-beta3-SNAPSHOT</version>
         	<type>bundle</type>
         </dependency>
 	</dependencies>
