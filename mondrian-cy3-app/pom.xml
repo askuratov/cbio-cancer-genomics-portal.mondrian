@@ -15,6 +15,10 @@
 
 	<packaging>bundle</packaging>
 
+	<properties>
+		<cytoscape.version>3.0.0-beta4-SNAPSHOT</cytoscape.version>
+	</properties>
+
 	<build>
 		<resources>
 			<resource>
@@ -117,17 +121,17 @@
 		<dependency>
 			<groupId>org.cytoscape</groupId>
 			<artifactId>service-api</artifactId>
-			<version>[3.0.0-alpha7,4.0)</version>
+			<version>${cytoscape.version}</version>
 		</dependency>
 		<dependency>
 			<groupId>org.cytoscape</groupId>
 			<artifactId>swing-application-api</artifactId>
-			<version>[3.0.0-alpha7,4.0)</version>
+			<version>${cytoscape.version}</version>
 		</dependency>
 		<dependency>
 			<groupId>org.cytoscape</groupId>
 			<artifactId>session-api</artifactId>
-			<version>[3.0.0-alpha7,4.0)</version>
+			<version>${cytoscape.version}</version>
 		</dependency>
 
         <dependency>
@@ -139,7 +143,7 @@
         <dependency>
         	<groupId>org.cytoscape</groupId>
         	<artifactId>property-api</artifactId>
-        	<version>3.0.0-beta3-SNAPSHOT</version>
+		<version>${cytoscape.version}</version>
         	<type>bundle</type>
         </dependency>
 	</dependencies>
